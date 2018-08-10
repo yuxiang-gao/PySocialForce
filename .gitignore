@@ -1,0 +1,11 @@
+# Python
+venv*/
+*.egg-info/
+.pytest_cache/
+__pycache__/
+
+# editors
+.vscode/
+
+# OS
+.DS_Store

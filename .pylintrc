@@ -1,0 +1,14 @@
+[BASIC]
+
+variable-rgx=[a-z0-9_]{1,30}$
+good-names=b,e,f,faB,F0,Fab,FaB,F,grad_raB,i,n,nx,ny,xy,r,raB,U,u0,V,v0,w
+
+[TYPECHECK]
+
+# List of members which are set dynamically and missed by pylint inference
+# system, and so shouldn't trigger E1101 when accessed. Python regular
+# expressions are accepted.
+generated-members=numpy.*,torch.*
+
+
+disable=useless-object-inheritance,too-many-instance-attributes,too-few-public-methods,too-many-arguments
