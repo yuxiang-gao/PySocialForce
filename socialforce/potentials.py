@@ -2,6 +2,8 @@
 
 import numpy as np
 
+from . import stateutils
+
 
 class PedPedPotential(object):
     """Ped-ped interaction potential.
@@ -28,16 +30,33 @@ class PedPedPotential(object):
 
         return 0.5 * np.sqrt(in_sqrt)
 
-    def __call__(self, rab, speeds, desired_directions):
+    def value_rab(self, rab, speeds, desired_directions):
+        """Value of potential explicitely parametrized with r_ab."""
         return self.v0 * np.exp(-self.b(rab, speeds, desired_directions) / self.sigma)
 
-    def grad_rab(self, rab, speeds, desired_directions, delta=1e-3):
+    @staticmethod
+    def rab(state):
+        """r_ab"""
+        r = state[:, 0:2]
+        r_a = np.expand_dims(r, 1)
+        r_b = np.expand_dims(r, 0)
+        return r_a - r_b
+
+    def __call__(self, state):
+        speeds = stateutils.speeds(state)
+        return self.value_rab(self.rab(state), speeds, stateutils.desired_directions(state))
+
+    def grad_rab(self, state, delta=1e-3):
+        rab = self.rab(state)
+        speeds = stateutils.speeds(state)
+        desired_directions = stateutils.desired_directions(state)
+
         dx = np.array([[[delta, 0.0]]])
         dy = np.array([[[0.0, delta]]])
 
-        v = self(rab, speeds, desired_directions)
-        dvdx = (self(rab + dx, speeds, desired_directions) - v) / delta
-        dvdy = (self(rab + dy, speeds, desired_directions) - v) / delta
+        v = self.value_rab(rab, speeds, desired_directions)
+        dvdx = (self.value_rab(rab + dx, speeds, desired_directions) - v) / delta
+        dvdy = (self.value_rab(rab + dy, speeds, desired_directions) - v) / delta
 
         # remove gradients from self-intereactions
         np.fill_diagonal(dvdx, 0.0)

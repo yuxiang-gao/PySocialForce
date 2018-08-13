@@ -16,6 +16,7 @@ def canvas(image_file=None, **kwargs):
     fig, ax = plt.subplots(**kwargs)
     ax.grid(linestyle='dotted')
     ax.set_aspect(1.0, 'datalim')
+    ax.set_axisbelow(True)
 
     yield ax
 
@@ -33,6 +34,7 @@ def animation(n, movie_file=None, writer=None, **kwargs):
     fig.set_tight_layout(True)
     ax.grid(linestyle='dotted')
     ax.set_aspect(1.0, 'datalim')
+    ax.set_axisbelow(True)
 
     context = {'ax': ax, 'update_function': None}
     yield context

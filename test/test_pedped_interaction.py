@@ -4,12 +4,12 @@ import socialforce
 
 
 def test_rab():
-    initial_state = np.array([
+    state = np.array([
         [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
         [1.0, 0.0, 0.0, 0.0, 1.0, 1.0],
     ])
-    s = socialforce.Simulator(initial_state)
-    assert s.rab().tolist() == [[
+    V = socialforce.potentials.PedPedPotential(0.4)
+    assert V.rab(state).tolist() == [[
         [0.0, 0.0],
         [-1.0, 0.0],
     ], [
@@ -35,25 +35,17 @@ def test_fab():
 
 
 def test_b_zero_vel():
-    initial_state = np.array([
-        [0.0, 0.0, 0.0, 0.0, 1.0, 1.0],
-        [1.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-    ])
-    s = socialforce.Simulator(initial_state)
-    assert s.V.b(s.rab(), s.speeds(), s.desired_directions()).tolist() == [
+    r_ab = np.array([[
+        [0.0, 0.0],
+        [-1.0, 0.0],
+    ], [
+        [1.0, 0.0],
+        [0.0, 0.0],
+    ]])
+    speeds = np.array([0.0, 0.0])
+    desired_directions = ([[1.0, 0.0], [-1.0, 0.0]])
+    V = socialforce.potentials.PedPedPotential(0.4)
+    assert V.b(r_ab, speeds, desired_directions).tolist() == [
         [0.0, 1.0],
         [1.0, 0.0],
-    ]
-
-
-def test_w():
-    initial_state = np.array([
-        [0.0, 0.0, 0.5, 0.5, 10.0, 10.0],
-        [10.0, 0.3, -0.5, 0.5, 0.0, 10.0],
-    ])
-    s = socialforce.Simulator(initial_state)
-    w = s.w(s.desired_directions(), -s.fab())
-    assert w.tolist() == [
-        [0, 1],
-        [1, 0],
     ]

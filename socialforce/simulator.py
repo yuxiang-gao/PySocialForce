@@ -7,6 +7,7 @@ import numpy as np
 
 from .potentials import PedPedPotential, PedSpacePotential
 from .fieldofview import FieldOfView
+from . import stateutils
 
 MEAN_VELOCITY = 1.34  # m/s
 SIGMA_VEL = 0.26  # std dev in m/s
@@ -28,6 +29,9 @@ class Simulator(object):
     """
     def __init__(self, initial_state, space=None, delta_t=0.4, tau=0.5):
         self.state = initial_state
+        self.initial_speeds = stateutils.speeds(initial_state)
+        self.max_speeds = MAX_SPEED_MULTIPLIER * self.initial_speeds
+
         self.space = space or []
         self.delta_t = delta_t
 
@@ -36,9 +40,6 @@ class Simulator(object):
                 tau = tau * np.ones(self.state.shape[0])
             self.state = np.concatenate((self.state, np.expand_dims(tau, -1)), axis=-1)
 
-        self.initial_speeds = self.speeds()
-        self.max_speeds = MAX_SPEED_MULTIPLIER * self.initial_speeds
-
         # potentials
         self.V = PedPedPotential(self.delta_t)
         self.U = PedSpacePotential()
@@ -46,27 +47,9 @@ class Simulator(object):
         # field of view
         self.w = FieldOfView()
 
-    def speeds(self):
-        """Calculate the speeds of all pedestrians."""
-        velocities = self.state[:, 2:4]
-        return np.linalg.norm(velocities, axis=1)
-
-    def desired_directions(self):
-        """Given the current state and destination, compute desired direction."""
-        destination_vectors = self.state[:, 4:6] - self.state[:, 0:2]
-        norm_factors = np.linalg.norm(destination_vectors, axis=-1)
-        return destination_vectors / np.expand_dims(norm_factors, -1)
-
-    def rab(self):
-        """r_ab"""
-        r = self.state[:, 0:2]
-        r_a = np.expand_dims(r, 1)
-        r_b = np.expand_dims(r, 0)
-        return r_a - r_b
-
     def fab(self):
         """Compute f_ab using finite difference differentiation."""
-        return -1.0 * self.V.grad_rab(self.rab(), self.speeds(), self.desired_directions())
+        return -1.0 * self.V.grad_rab(self.state)
 
     def raB(self):
         """r_aB"""
@@ -93,7 +76,7 @@ class Simulator(object):
 
     def step(self):
         # accelerate to desired velocity
-        e = self.desired_directions()
+        e = stateutils.desired_directions(self.state)
         vel = self.state[:, 2:4]
         tau = self.state[:, 6:7]
         F0 = 1.0 / tau * (np.expand_dims(self.initial_speeds, -1) * e - vel)

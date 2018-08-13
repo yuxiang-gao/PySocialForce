@@ -16,7 +16,9 @@ class FieldOfView(object):
     def __call__(self, e, f):
         """Weighting factor for field of view.
 
-        Assumes e is normalized."""
+        e is rank 2 and normalized in the last index.
+        f is a rank 3 tensor.
+        """
         in_sight = np.einsum('aj,abj->ab', e, f) > np.linalg.norm(f, axis=-1) * self.cosphi
         out = self.out_of_view_factor * np.ones_like(in_sight)
         out[in_sight] = 1.0
