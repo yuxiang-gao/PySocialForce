@@ -18,19 +18,23 @@ class Simulator(object):
     """Simulate social force model.
 
     Main interface is the state. Every pedestrian is an entry in the state and
-    represented by a vector in phase space (x, y, v_x, v_y).
+    represented by a vector (x, y, v_x, v_y, d_x, d_y, [tau]).
+    tau is optional in this vector.
 
     space is a list of numpy arrays containing points of boundaries.
 
     delta_t in seconds.
-    tau in seconds.
+    tau in seconds: either float or numpy array of shape[n_ped].
     """
-    def __init__(self, initial_state, destinations, space=None, delta_t=0.4, tau=0.5):
+    def __init__(self, initial_state, space=None, delta_t=0.4, tau=0.5):
         self.state = initial_state
-        self.destinations = destinations
         self.space = space or []
         self.delta_t = delta_t
-        self.tau = tau
+
+        if self.state.shape[1] < 7:
+            if not hasattr(tau, 'shape'):
+                tau = tau * np.ones(self.state.shape[0])
+            self.state = np.concatenate((self.state, np.expand_dims(tau, -1)), axis=-1)
 
         self.initial_speeds = self.speeds()
         self.max_speeds = MAX_SPEED_MULTIPLIER * self.initial_speeds
@@ -49,7 +53,7 @@ class Simulator(object):
 
     def desired_directions(self):
         """Given the current state and destination, compute desired direction."""
-        destination_vectors = self.destinations - self.state[:, 0:2]
+        destination_vectors = self.state[:, 4:6] - self.state[:, 0:2]
         norm_factors = np.linalg.norm(destination_vectors, axis=-1)
         return destination_vectors / np.expand_dims(norm_factors, -1)
 
@@ -91,7 +95,8 @@ class Simulator(object):
         # accelerate to desired velocity
         e = self.desired_directions()
         vel = self.state[:, 2:4]
-        F0 = 1.0 / self.tau * (np.expand_dims(self.initial_speeds, -1) * e - vel)
+        tau = self.state[:, 6:7]
+        F0 = 1.0 / tau * (np.expand_dims(self.initial_speeds, -1) * e - vel)
 
         # repulsive terms between pedestrians
         fab = self.fab()
