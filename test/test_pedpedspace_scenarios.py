@@ -47,7 +47,7 @@ def test_separator():
     space = [
         np.array([(i, i) for i in np.linspace(-1, 4.0)]),
     ]
-    s = socialforce.Simulator(initial_state, space)
+    s = socialforce.Simulator(initial_state, socialforce.PedSpacePotential(space))
     states = np.stack([s.step().state.copy() for _ in range(80)])
 
     # visualize
@@ -72,7 +72,7 @@ def test_gate():
         np.array([(0.0, y) for y in np.linspace(-10, -0.7, 1000)]),
         np.array([(0.0, y) for y in np.linspace(0.7, 10, 1000)]),
     ]
-    s = socialforce.Simulator(initial_state, space)
+    s = socialforce.Simulator(initial_state, socialforce.PedSpacePotential(space))
     states = np.stack([s.step().state.copy() for _ in range(150)])
 
     with visualize(states, space, 'docs/gate.gif') as _:
@@ -100,7 +100,7 @@ def walkway(n=30):
         np.array([(x, 5) for x in np.linspace(-25, 25, num=5000)]),
         np.array([(x, -5) for x in np.linspace(-25, 25, num=5000)]),
     ]
-    s = socialforce.Simulator(initial_state, space)
+    s = socialforce.Simulator(initial_state, socialforce.PedSpacePotential(space))
     states = []
     for _ in range(250):
         state = s.step().state

@@ -11,4 +11,5 @@ def desired_directions(state):
 
 
 def speeds(state):
+    """Return the speeds corresponding to a given state."""
     return np.linalg.norm(state[:, 2:4], axis=-1)

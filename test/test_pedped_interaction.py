@@ -8,8 +8,8 @@ def test_rab():
         [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
         [1.0, 0.0, 0.0, 0.0, 1.0, 1.0],
     ])
-    V = socialforce.potentials.PedPedPotential(0.4)
-    assert V.rab(state).tolist() == [[
+    V = socialforce.PedPedPotential(0.4)
+    assert V.r_ab(state).tolist() == [[
         [0.0, 0.0],
         [-1.0, 0.0],
     ], [
@@ -25,7 +25,7 @@ def test_fab():
     ])
     s = socialforce.Simulator(initial_state)
     force_at_unit_distance = 0.25  # TODO confirm
-    assert s.fab() == pytest.approx(np.array([[
+    assert s.f_ab() == pytest.approx(np.array([[
         [0.0, 0.0],
         [-force_at_unit_distance, 0.0],
     ], [
@@ -44,7 +44,7 @@ def test_b_zero_vel():
     ]])
     speeds = np.array([0.0, 0.0])
     desired_directions = ([[1.0, 0.0], [-1.0, 0.0]])
-    V = socialforce.potentials.PedPedPotential(0.4)
+    V = socialforce.PedPedPotential(0.4)
     assert V.b(r_ab, speeds, desired_directions).tolist() == [
         [0.0, 1.0],
         [1.0, 0.0],
