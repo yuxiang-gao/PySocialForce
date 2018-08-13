@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import socialforce
 
@@ -36,38 +37,34 @@ def test_gate():
 
     # visualize
     print('')
-    with socialforce.show.canvas('docs/gate.png') as ax:
-        ax.set_xlabel('x [m]')
-        ax.set_ylabel('y [m]')
-
-        for ped in range(initial_state.shape[0]):
-            x = states[:, ped, 0]
-            y = states[:, ped, 1]
-            ax.plot(x, y, '-o', label='ped {}'.format(ped), markersize=2.5)
-
-        for s in space:
-            ax.plot(s[:, 0], s[:, 1], color='black')
-
-        ax.legend()
-
     with socialforce.show.animation(
-            len(states) - 5,
+            len(states),
             'docs/gate.gif',
-            writer='imagemagick') as (ax, update_functions):
+            writer='imagemagick') as context:
+        ax = context['ax']
         ax.set_xlabel('x [m]')
         ax.set_ylabel('y [m]')
 
         for s in space:
-            ax.plot(s[:, 0], s[:, 1], color='black')
+            ax.plot(s[:, 0], s[:, 1], '-o', color='black', markersize=2.5)
 
         actors = []
         for ped in range(initial_state.shape[0]):
-            p, = ax.plot(states[0:5, ped, 0], states[0:5, ped, 1],
-                         '-o', label='ped {}'.format(ped), markersize=2.5)
+            # p, = ax.plot(states[0:5, ped, 0], states[0:5, ped, 1],
+            #              '-o', label='ped {}'.format(ped), markersize=2.5)
+            speed = np.linalg.norm(states[0, ped, 2:4])
+            radius = 0.2 + speed / 2.0 * 0.3
+            p = plt.Circle(states[0, ped, 0:2], radius=radius,
+                           facecolor='black' if states[0, ped, 0] < 0 else 'white',
+                           edgecolor='black')
             actors.append(p)
+            ax.add_patch(p)
 
         def update(i):
             for ped, p in enumerate(actors):
-                p.set_data(states[i:i+5, ped, 0], states[i:i+5, ped, 1])
+                # p.set_data(states[i:i+5, ped, 0], states[i:i+5, ped, 1])
+                p.center = states[i, ped, 0:2]
+                speed = np.linalg.norm(states[i, ped, 2:4])
+                p.set_radius(0.2 + speed / 2.0 * 0.3)
 
-        update_functions.append(update)
+        context['update_function'] = update

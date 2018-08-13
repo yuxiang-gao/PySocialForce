@@ -34,13 +34,10 @@ def animation(n, movie_file=None, writer=None, **kwargs):
     ax.grid(linestyle='dotted')
     ax.set_aspect(1.0, 'datalim')
 
-    update_functions = []
-    yield ax, update_functions
+    context = {'ax': ax, 'update_function': None}
+    yield context
 
-    def update_function(i):
-        return [uf(i) for uf in update_functions]
-
-    ani = mpl_animation.FuncAnimation(fig, update_function, range(n))
+    ani = mpl_animation.FuncAnimation(fig, context['update_function'], range(n))
     if movie_file:
         ani.save(movie_file, writer=writer)
     fig.show()
