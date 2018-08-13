@@ -47,6 +47,7 @@ class PedPedPotential(object):
         return self.value_rab(self.rab(state), speeds, stateutils.desired_directions(state))
 
     def grad_rab(self, state, delta=1e-3):
+        """Compute gradient wrt r_ab using finite difference differentiation."""
         rab = self.rab(state)
         speeds = stateutils.speeds(state)
         desired_directions = stateutils.desired_directions(state)
@@ -72,19 +73,42 @@ class PedSpacePotential(object):
     r is in m
     """
 
-    def __init__(self, u0=10, r=0.2):
+    def __init__(self, space, u0=10, r=0.2):
+        self.space = space or []
         self.u0 = u0
         self.r = r
 
-    def __call__(self, raB):
+    def value_raB(self, raB):
+        """Compute value parametrized with r_aB."""
         return self.u0 * np.exp(-1.0 * np.linalg.norm(raB, axis=-1) / self.r)
 
-    def grad_raB(self, raB, delta=1e-3):
+    def raB(self, state):
+        """r_aB"""
+        if not self.space:
+            return np.zeros((state.shape[0], 0, 2))
+
+        r_a = np.expand_dims(state[:, 0:2], 1)
+        closest_i = [
+            np.argmin(np.linalg.norm(r_a - np.expand_dims(B, 0), axis=-1), axis=1)
+            for B in self.space
+        ]
+        closest_points = np.swapaxes(
+            np.stack([B[i] for B, i in zip(self.space, closest_i)]),
+            0, 1)  # index order: pedestrian, boundary, coordinates
+        return r_a - closest_points
+
+    def __call__(self, state):
+        return self.value_raB(self.raB(state))
+
+    def grad_raB(self, state, delta=1e-3):
+        """Compute gradient wrt r_aB using finite difference differentiation."""
+        raB = self.raB(state)
+
         dx = np.array([[[delta, 0.0]]])
         dy = np.array([[[0.0, delta]]])
 
-        v = self(raB)
-        dvdx = (self(raB + dx) - v) / delta
-        dvdy = (self(raB + dy) - v) / delta
+        v = self.value_raB(raB)
+        dvdx = (self.value_raB(raB + dx) - v) / delta
+        dvdy = (self.value_raB(raB + dy) - v) / delta
 
         return np.stack((dvdx, dvdy), axis=-1)

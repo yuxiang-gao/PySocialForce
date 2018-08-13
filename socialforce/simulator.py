@@ -32,7 +32,6 @@ class Simulator(object):
         self.initial_speeds = stateutils.speeds(initial_state)
         self.max_speeds = MAX_SPEED_MULTIPLIER * self.initial_speeds
 
-        self.space = space or []
         self.delta_t = delta_t
 
         if self.state.shape[1] < 7:
@@ -42,32 +41,18 @@ class Simulator(object):
 
         # potentials
         self.V = PedPedPotential(self.delta_t)
-        self.U = PedSpacePotential()
+        self.U = PedSpacePotential(space)
 
         # field of view
         self.w = FieldOfView()
 
     def fab(self):
-        """Compute f_ab using finite difference differentiation."""
+        """Compute f_ab."""
         return -1.0 * self.V.grad_rab(self.state)
 
-    def raB(self):
-        """r_aB"""
-        if not self.space:
-            return np.zeros((self.state.shape[0], 0, 2))
-
-        r_a = np.expand_dims(self.state[:, 0:2], 1)
-        closest_i = [
-            np.argmin(np.linalg.norm(r_a - np.expand_dims(B, 0), axis=-1), axis=1)
-            for B in self.space
-        ]
-        closest_points = np.swapaxes(
-            np.stack([B[i] for B, i in zip(self.space, closest_i)]),
-            0, 1)  # index order: pedestrian, boundary, coordinates
-        return r_a - closest_points
-
     def faB(self):
-        return -1.0 * self.U.grad_raB(self.raB())
+        """Compute f_aB."""
+        return -1.0 * self.U.grad_raB(self.state)
 
     def capped_velocity(self, desired_velocity):
         desired_speeds = np.linalg.norm(desired_velocity, axis=-1)
