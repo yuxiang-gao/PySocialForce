@@ -24,11 +24,13 @@ Install and Run
     pytest
 
 
-Ped-Space Scenarios
-===================
+Ped-Ped-Space Scenarios
+=======================
 
 +----------------------------------------+----------------------------------------+
-| .. image:: docs/gate.gif               | .. image:: docs/gate.png               |
+| .. image:: docs/separator.gif          | .. image:: docs/gate.gif               |
++----------------------------------------+----------------------------------------+
+| .. image:: docs/walkway_30.gif         | .. image:: docs/walkway_60.gif         |
 +----------------------------------------+----------------------------------------+
 
 
