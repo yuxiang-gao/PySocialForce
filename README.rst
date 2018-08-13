@@ -1,3 +1,7 @@
+.. image:: https://travis-ci.org/svenkreiss/socialforce.svg?branch=master
+    :target: https://travis-ci.org/svenkreiss/socialforce
+
+
 Social Force Model
 ==================
 

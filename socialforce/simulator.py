@@ -1,3 +1,5 @@
+# coding=utf-8
+
 """Synthetic pedestrian behavior according to the Social Force model.
 
 See Helbing and Molnár 1998.
@@ -8,9 +10,6 @@ import numpy as np
 from .potentials import PedPedPotential
 from .fieldofview import FieldOfView
 from . import stateutils
-
-MEAN_VELOCITY = 1.34  # m/s
-SIGMA_VEL = 0.26  # std dev in m/s
 
 MAX_SPEED_MULTIPLIER = 1.3  # with respect to initial speed
 
