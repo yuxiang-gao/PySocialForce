@@ -1,11 +1,13 @@
 from contextlib import contextmanager
-import matplotlib.pyplot as plt
 import numpy as np
+import pytest
 import socialforce
 
 
 @contextmanager
 def visualize(states, space, output_filename):
+    import matplotlib.pyplot as plt
+
     print('')
     with socialforce.show.animation(
             len(states),
@@ -40,6 +42,7 @@ def visualize(states, space, output_filename):
         context['update_function'] = update
 
 
+@pytest.mark.plot
 def test_separator():
     initial_state = np.array([
         [-10.0, -0.0, 1.0, 0.0, 10.0, 0.0],
@@ -55,6 +58,7 @@ def test_separator():
         ax.set_xlim(-10, 10)
 
 
+@pytest.mark.plot
 def test_gate():
     initial_state = np.array([
         [-9.0, -0.0, 1.0, 0.0, 10.0, 0.0],
@@ -79,7 +83,8 @@ def test_gate():
         pass
 
 
-def walkway(n=30):
+@pytest.mark.parametrize('n', [30, 60])
+def test_walkway(n):
     pos_left = ((np.random.random((n, 2)) - 0.5) * 2.0) * np.array([25.0, 5.0])
     pos_right = ((np.random.random((n, 2)) - 0.5) * 2.0) * np.array([25.0, 5.0])
 
@@ -113,11 +118,3 @@ def walkway(n=30):
 
     with visualize(states, space, 'docs/walkway_{}.gif'.format(n)) as _:
         pass
-
-
-def test_walkway_30():
-    walkway(30)
-
-
-def test_walkway_60():
-    walkway(60)

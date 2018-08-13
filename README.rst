@@ -19,9 +19,9 @@ Install and Run
     # or install from source
     pip install -e '.[test,plot]'
 
-    # run linting
+    # run linting and tests
     pylint socialforce
-    pytest
+    pytest tests/*.py
 
 
 Ped-Ped-Space Scenarios
