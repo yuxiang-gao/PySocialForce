@@ -34,6 +34,9 @@ Ped-Ped-Space Scenarios
 +----------------------------------------+----------------------------------------+
 | .. image:: docs/separator.gif          | .. image:: docs/gate.gif               |
 +----------------------------------------+----------------------------------------+
+| Emergent lane formation with           | Emergent lane formation with           |
+| 30 pedestrians:                        | 60 pedestrians:                        |
+|                                        |                                        |
 | .. image:: docs/walkway_30.gif         | .. image:: docs/walkway_60.gif         |
 +----------------------------------------+----------------------------------------+
 
