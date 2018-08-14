@@ -17,7 +17,7 @@ Install and Run
 
 .. code-block:: sh
 
-    # install from pypi
+    # install from PyPI
     pip install 'socialforce[test,plot]'
 
     # or install from source
