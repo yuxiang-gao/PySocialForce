@@ -22,11 +22,13 @@ class Simulator(object):
     tau is optional in this vector.
 
     ped_space is an instance of PedSpacePotential.
+    ped_ped is an instance of PedPedPotential.
 
     delta_t in seconds.
     tau in seconds: either float or numpy array of shape[n_ped].
     """
-    def __init__(self, initial_state, ped_space=None, delta_t=0.4, tau=0.5):
+    def __init__(self, initial_state, ped_space=None, ped_ped=None,
+                 field_of_view=None, delta_t=0.4, tau=0.5):
         self.state = initial_state
         self.initial_speeds = stateutils.speeds(initial_state)
         self.max_speeds = MAX_SPEED_MULTIPLIER * self.initial_speeds
@@ -39,11 +41,11 @@ class Simulator(object):
             self.state = np.concatenate((self.state, np.expand_dims(tau, -1)), axis=-1)
 
         # potentials
-        self.V = PedPedPotential(self.delta_t)
+        self.V = ped_ped or PedPedPotential(self.delta_t)
         self.U = ped_space
 
         # field of view
-        self.w = FieldOfView()
+        self.w = field_of_view or FieldOfView()
 
     def f_ab(self):
         """Compute f_ab."""
@@ -59,6 +61,7 @@ class Simulator(object):
         """Scale down a desired velocity to its capped speed."""
         desired_speeds = np.linalg.norm(desired_velocity, axis=-1)
         factor = np.minimum(1.0, self.max_speeds / desired_speeds)
+        factor[desired_speeds == 0] = 0.0
         return desired_velocity * np.expand_dims(factor, -1)
 
     def step(self):
