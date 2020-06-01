@@ -3,6 +3,7 @@
 import numpy as np
 
 from . import stateutils
+from numba import njit
 
 
 class PedPedPotential(object):
@@ -18,15 +19,21 @@ class PedPedPotential(object):
         self.sigma = sigma
 
     def b(self, r_ab, speeds, desired_directions):
-        """Calculate b."""
+        """Calculate b.
+        b denotes the semi-minor axis of the ellipse and is given by
+        e: desired direction
+        2b=sqrt((r_ab+(r_ab-v*delta_t*e_b))
+        """
         speeds_b = np.expand_dims(speeds, axis=0)
-        speeds_b_abc = np.expand_dims(speeds_b, axis=2)  # abc = alpha, beta, coordinates
+        speeds_b_abc = np.expand_dims(
+            speeds_b, axis=2
+        )  # abc = alpha, beta, coordinates
         e_b = np.expand_dims(desired_directions, axis=0)
 
         in_sqrt = (
-            np.linalg.norm(r_ab, axis=-1) +
-            np.linalg.norm(r_ab - self.delta_t * speeds_b_abc * e_b, axis=-1)
-        )**2 - (self.delta_t * speeds_b)**2
+            np.linalg.norm(r_ab, axis=-1)
+            + np.linalg.norm(r_ab - self.delta_t * speeds_b_abc * e_b, axis=-1)
+        ) ** 2 - (self.delta_t * speeds_b) ** 2
         np.fill_diagonal(in_sqrt, 0.0)
 
         return 0.5 * np.sqrt(in_sqrt)
@@ -36,8 +43,11 @@ class PedPedPotential(object):
         return self.v0 * np.exp(-self.b(r_ab, speeds, desired_directions) / self.sigma)
 
     @staticmethod
+    @njit
     def r_ab(state):
-        """r_ab"""
+        """r_ab
+        r_ab := r_a − r_b.
+        """
         r = state[:, 0:2]
         r_a = np.expand_dims(r, 1)
         r_b = np.expand_dims(r, 0)
@@ -45,7 +55,9 @@ class PedPedPotential(object):
 
     def __call__(self, state):
         speeds = stateutils.speeds(state)
-        return self.value_r_ab(self.r_ab(state), speeds, stateutils.desired_directions(state))
+        return self.value_r_ab(
+            self.r_ab(state), speeds, stateutils.desired_directions(state)
+        )
 
     def grad_r_ab(self, state, delta=1e-3):
         """Compute gradient wrt r_ab using finite difference differentiation."""
@@ -96,8 +108,8 @@ class PedSpacePotential(object):
             for B in self.space
         ]
         closest_points = np.swapaxes(
-            np.stack([B[i] for B, i in zip(self.space, closest_i)]),
-            0, 1)  # index order: pedestrian, boundary, coordinates
+            np.stack([B[i] for B, i in zip(self.space, closest_i)]), 0, 1
+        )  # index order: pedestrian, boundary, coordinates
         return r_a - closest_points
 
     def __call__(self, state):
@@ -115,3 +127,8 @@ class PedSpacePotential(object):
         dvdy = (self.value_r_aB(r_aB + dy) - v) / delta
 
         return np.stack((dvdx, dvdy), axis=-1)
+
+
+class PedGroupPotential(object):
+    def __init__(self):
+        pass

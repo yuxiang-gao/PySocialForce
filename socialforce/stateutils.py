@@ -1,6 +1,8 @@
 """Utility functions to process state."""
 
 import numpy as np
+from collections import namedtuple
+from numba import njit
 
 
 def desired_directions(state):
@@ -12,6 +14,13 @@ def desired_directions(state):
     return directions
 
 
+# def speeds(state):
+#     """Return the speeds corresponding to a given state."""
+#     return np.linalg.norm(state[:, 2:4], axis=-1)
+@njit
 def speeds(state):
     """Return the speeds corresponding to a given state."""
-    return np.linalg.norm(state[:, 2:4], axis=-1)
+    speeds = []
+    for i, s in enumerate(state[:, 2:4]):
+        speeds.append(np.linalg.norm(s))
+    return np.array(speeds)
