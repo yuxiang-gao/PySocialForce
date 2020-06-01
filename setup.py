@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 # extract version from __init__.py
 with open("socialforce/__init__.py", "r") as f:
@@ -7,16 +7,16 @@ with open("socialforce/__init__.py", "r") as f:
 
 
 setup(
-    name="socialforce",
+    name="extended-social-force",
     version=VERSION,
-    packages=["socialforce",],
+    packages=find_packages(),
     license="MIT",
-    description="Numpy implementation of the Social Force model.",
+    description="Numpy implementation of the Extended Social Force model.",
     long_description=open("README.rst").read(),
-    author="Sven Kreiss",
-    author_email="me@svenkreiss.com",
-    url="https://github.com/svenkreiss/socialforce",
-    install_requires=["numpy",],
+    author="Sven Kreiss, Yuxiang Gao",
+    author_email="me@svenkreiss.com, yuxiang.gao@jhu.edu",
+    url="https://github.com/yuxiang-gao/socialforce",
+    install_requires=["numpy", "scipy", "numba"],
     extras_require={
         "dev": ["black", "jupyter"],
         "test": ["pylint", "pytest",],

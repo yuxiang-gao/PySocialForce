@@ -1,0 +1,27 @@
+title = "Social Force Config File"
+
+time_step = 0.4
+max_speed_multiplier = 1.3
+tau = 0.5
+
+[goal_attractive_force]
+factor = 1.0
+
+[ped_repulsive_force]
+factor = 1.0
+v0 = 10
+sigma = 0.3
+# fov params
+fov_phi = 100.0
+fov_factor = 0.5 # out of view factor
+
+[space_repulsive_force]
+factor = 1.0
+u0 = 10
+r = 0.2
+
+[group_coherence_force]
+
+[group_repulsive_force]
+
+[group_gaze_force]
