@@ -21,6 +21,6 @@ def desired_directions(state):
 def speeds(state):
     """Return the speeds corresponding to a given state."""
     speeds = []
-    for i, s in enumerate(state[:, 2:4]):
+    for s in state[:, 2:4]:
         speeds.append(np.linalg.norm(s))
     return np.array(speeds)

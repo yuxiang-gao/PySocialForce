@@ -39,7 +39,7 @@ class PedPedPotential(object):
         return 0.5 * np.sqrt(in_sqrt)
 
     def value_r_ab(self, r_ab, speeds, desired_directions):
-        """Value of potential explicitely parametrized with r_ab."""
+        """Value of potential explicitly parametrized with r_ab."""
         return self.v0 * np.exp(-self.b(r_ab, speeds, desired_directions) / self.sigma)
 
     @staticmethod
@@ -127,8 +127,3 @@ class PedSpacePotential(object):
         dvdy = (self.value_r_aB(r_aB + dy) - v) / delta
 
         return np.stack((dvdx, dvdy), axis=-1)
-
-
-class PedGroupPotential(object):
-    def __init__(self):
-        pass
