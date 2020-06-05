@@ -38,10 +38,13 @@ def vec_diff(state):
     return r_a - r_b
 
 
-@jit
+@njit
 def speeds(state):
-    """Return the speeds corresponding to a given state."""
-    return np.linalg.norm(state[:, 2:4], axis=-1)
+    #     """Return the speeds corresponding to a given state."""
+    #     return np.linalg.norm(state[:, 2:4], axis=-1)
+    speed_vecs = state[:, 2:4]
+    speeds = np.array([np.linalg.norm(s) for s in speed_vecs])
+    return speeds
 
 
 @njit

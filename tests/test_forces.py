@@ -16,8 +16,9 @@ def test_group_rep_force(generate_state):
     f = socialforce.GroupRepulsiveForce()
     f.config = {"factor": 1.0, "threshold": 0.5}
     f.set_state(state, groups=groups)
+    print(f.get_force())
     assert f.get_force() == pytest.approx(
-        np.array([[0.0, -0.1], [0.0, 0.1], [0.0, -0.01], [0.0, 0.01], [0.0, 0.0]])
+        -np.array([[0.0, -0.1], [0.0, 0.1], [0.0, -0.01], [0.0, 0.01], [0.0, 0.0]])
     )
 
 
