@@ -10,11 +10,4 @@ dist/
 
 # OS
 .DS_Store
-build/lib/socialforce/__init__.py
-build/lib/socialforce/fieldofview.py
-build/lib/socialforce/forces.py
-build/lib/socialforce/potentials.py
-build/lib/socialforce/show.py
-build/lib/socialforce/simulator copy.py
-build/lib/socialforce/simulator.py
-build/lib/socialforce/stateutils.py
+build/
