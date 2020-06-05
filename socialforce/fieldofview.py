@@ -17,7 +17,7 @@ class FieldOfView(object):
     def __call__(self, e, f):
         """Weighting factor for field of view.
 
-        e is rank 2 and normalized in the last index.
+        e: desied direction, e is rank 2 and normalized in the last index. 
         f is a rank 3 tensor.
         """
         in_sight = (

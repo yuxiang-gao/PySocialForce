@@ -30,11 +30,13 @@ class Simulator(object):
         self.groups = groups
         self.config = toml.load(config_file)
 
-        initial_speeds = stateutils.speeds(self.state)
-        self.max_speeds = self.config.get("max_speed_multiplier") * initial_speeds
+        self.time_step = self.config.get("time_step") or 0.4
+
+        self.initial_speeds = stateutils.speeds(self.state)
+        self.max_speeds = self.config.get("max_speed_multiplier") * self.initial_speeds
 
         if self.state.shape[1] < 7:
-            tau = self.config.get("tau")
+            tau = self.config.get("tau") or 0.5
             if not hasattr(tau, "shape"):
                 tau = tau * np.ones(self.state.shape[0])
             self.state = np.concatenate((self.state, np.expand_dims(tau, -1)), axis=-1)
@@ -43,6 +45,9 @@ class Simulator(object):
             GoalAttractiveForce(),
             PedRepulsiveForce(),
             SpaceRepulsiveForce(),
+            GroupCoherenceForceAlt(),
+            GroupRepulsiveForce(),
+            GroupGazeForce(),
         ]
         self.forces[2].set_space(space)  # set space
         # self.group_forces = [GroupCoherenceForce(), GroupRepulsiveForce(), GroupGazeForce()]
@@ -58,12 +63,17 @@ class Simulator(object):
 
     def step(self):
         for force in self.forces:
-            force.set_state(self.state)
+            force.set_state(
+                self.state, groups=self.groups, initial_speeds=self.initial_speeds
+            )
+        # social forces
         F = sum(map(lambda x: x.get_force(), self.forces))
+        # desired velocity
+        w = self.state[:, 2:4] + self.time_step * F
         v = self.capped_velocity(w)
 
         # update state
-        self.state[:, 0:2] += v * self.delta_t
+        self.state[:, 0:2] += v * self.time_step
         self.state[:, 2:4] = v
 
         return self

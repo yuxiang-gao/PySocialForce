@@ -43,15 +43,11 @@ class PedPedPotential(object):
         return self.v0 * np.exp(-self.b(r_ab, speeds, desired_directions) / self.sigma)
 
     @staticmethod
-    @njit
     def r_ab(state):
         """r_ab
         r_ab := r_a − r_b.
         """
-        r = state[:, 0:2]
-        r_a = np.expand_dims(r, 1)
-        r_b = np.expand_dims(r, 0)
-        return r_a - r_b
+        return stateutils.vec_diff(state)
 
     def __call__(self, state):
         speeds = stateutils.speeds(state)

@@ -9,7 +9,7 @@ factor = 1.0
 
 [ped_repulsive_force]
 factor = 1.0
-v0 = 10
+v0 = 2.1
 sigma = 0.3
 # fov params
 fov_phi = 100.0
@@ -21,7 +21,13 @@ u0 = 10
 r = 0.2
 
 [group_coherence_force]
+factor = 2.0
 
 [group_repulsive_force]
+factor = 1.0
+threshold = 0.5
 
 [group_gaze_force]
+factor = 2.0
+# fov params
+fov_phi = 100.0
