@@ -30,7 +30,7 @@ Install and Run
     pip install -e '.[test,plot]'
 
     # run linting and tests
-    pylint socialforce
+    pylint pysocialforce
     pytest tests/*.py
 
 

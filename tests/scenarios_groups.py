@@ -1,5 +1,5 @@
 import numpy as np
-import socialforce
+import pysocialforce
 from contextlib import contextmanager
 
 
@@ -17,10 +17,10 @@ def test_group_crossing():
     )
     groups = [[0, 1], [2, 3, 4]]
     colors = cm.rainbow(np.linspace(0, 1, len(groups)))
-    s = socialforce.Simulator(initial_state, groups=groups)
+    s = pysocialforce.Simulator(initial_state, groups=groups)
     states = np.stack([s.step().state.copy() for _ in range(80)])
 
-    with socialforce.show.canvas("docs/group_crossing.png") as ax:
+    with pysocialforce.show.canvas("docs/group_crossing.png") as ax:
         ax.set_xlabel("x [m]")
         ax.set_ylabel("y [m]")
 
@@ -41,7 +41,7 @@ def visualize(states, space, output_filename):
     import matplotlib.animation as animation
 
     print("")
-    with socialforce.show.animation(
+    with pysocialforce.show.animation(
         len(states), output_filename, writer="imagemagick"
     ) as context:
         ax = context["ax"]

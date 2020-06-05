@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 import numpy as np
 import pytest
-import socialforce
+import pysocialforce
 
 
 @contextmanager
@@ -11,7 +11,7 @@ def visualize(states, space, output_filename):
 
     print("")
     # writer = animation.FFMpegWriter(fps=15, metadata=dict(artist="Me"), bitrate=1800)
-    with socialforce.show.animation(
+    with pysocialforce.show.animation(
         len(states), output_filename, writer="imagemagick"
     ) as context:
         ax = context["ax"]
@@ -52,7 +52,7 @@ def test_separator():
     space = [
         np.array([(i, i) for i in np.linspace(-1, 4.0)]),
     ]
-    s = socialforce.Simulator(initial_state, space=space)
+    s = pysocialforce.Simulator(initial_state, space=space)
     states = np.stack([s.step().state.copy() for _ in range(80)])
 
     # visualize
@@ -80,7 +80,7 @@ def test_gate():
         np.array([(0.0, y) for y in np.linspace(-10, -0.7, 1000)]),
         np.array([(0.0, y) for y in np.linspace(0.7, 10, 1000)]),
     ]
-    s = socialforce.Simulator(initial_state, space=space)
+    s = pysocialforce.Simulator(initial_state, space=space)
     states = np.stack([s.step().state.copy() for _ in range(150)])
 
     with visualize(states, space, "docs/gate.gif") as _:
@@ -111,7 +111,7 @@ def test_walkway(n):
         np.array([(x, 5) for x in np.linspace(-25, 25, num=5000)]),
         np.array([(x, -5) for x in np.linspace(-25, 25, num=5000)]),
     ]
-    s = socialforce.Simulator(initial_state, space=space)
+    s = pysocialforce.Simulator(initial_state, space=space)
     states = []
     for _ in range(250):
         state = s.step().state
