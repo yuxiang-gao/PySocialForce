@@ -4,7 +4,6 @@ import numpy as np
 from abc import ABC, abstractmethod
 from numba import jit, njit
 from . import stateutils
-from .stateutils import normalize, vec_diff
 from .potentials import PedPedPotential, PedSpacePotential
 from .fieldofview import FieldOfView
 
@@ -22,6 +21,7 @@ class Force(ABC):
         super().__init__()
         self.name = camel_to_snake(type(self).__name__)
         self.state = None
+        self.space = None
         self.groups = None
         self.goal_vector = None
         self.initial_speeds = None
@@ -36,9 +36,10 @@ class Force(ABC):
             self.factor = self.config.get("factor")
             self.time_step = config_dict.get("time_step")
 
-    def set_state(self, state, groups=None, initial_speeds=None):
+    def set_state(self, state, groups=None, space=None, initial_speeds=None):
         """Update states and groups"""
-        self.state = np.array(state)
+        self.state = state
+        self.space = space
         self.groups = groups
         self.goal_vector = stateutils.desired_directions(self.state)  # e
         if initial_speeds is not None:
@@ -71,7 +72,7 @@ class PedRepulsiveForce(Force):
 
     def get_force(self):
         potential_func = PedPedPotential(
-            self.time_step, v0=self.config["v0"], sigma=self.config["sigma"]
+            self.time_step, v0=self.config.get("v0"), sigma=self.config.get("sigma"),
         )
         f_ab = -1.0 * potential_func.grad_r_ab(self.state)
 
@@ -86,9 +87,6 @@ class PedRepulsiveForce(Force):
 
 class SpaceRepulsiveForce(Force):
     """Space to ped repulsive force"""
-
-    def set_space(self, space):
-        self.space = space
 
     def get_force(self):
         if self.space is None:
@@ -113,7 +111,7 @@ class GroupCoherenceForce(Force):
                 member_pos = member_states[:, 0:2]
                 com = stateutils.group_center(member_states)
                 force_vec = com - member_pos
-                vectors, norms = normalize(force_vec)
+                vectors, norms = stateutils.normalize(force_vec)
                 vectors[norms < threshold] = [0, 0]
                 forces[group, :] += vectors
         return forces * self.factor
@@ -146,8 +144,8 @@ class GroupRepulsiveForce(Force):
         if self.groups is not None:
             for group in self.groups:
                 member_pos = self.state[group][:, 0:2]
-                for m in vec_diff(member_pos):
-                    vectors, norms = normalize(m)
+                for m in stateutils.vec_diff(member_pos):
+                    vectors, norms = stateutils.normalize(m)
                     vectors = np.nan_to_num(vectors)
                     vectors[norms > threshold] = [0, 0]
                     forces[group, :] += m
@@ -181,7 +179,7 @@ class GroupGazeForce(Force):
                     ]
                 )
 
-                com_directions, _ = normalize(relative_com)
+                com_directions, _ = stateutils.normalize(relative_com)
                 # angle between walking direction and center of mass
                 com_angles = np.degrees(
                     [

@@ -16,7 +16,7 @@ setup(
     author="Sven Kreiss, Yuxiang Gao",
     author_email="me@svenkreiss.com, yuxiang.gao@jhu.edu",
     url="https://github.com/yuxiang-gao/socialforce",
-    install_requires=["numpy", "scipy", "numba"],
+    install_requires=["numpy", "toml", "numba"],
     extras_require={
         "dev": ["black", "jupyter"],
         "test": ["pylint", "pytest",],

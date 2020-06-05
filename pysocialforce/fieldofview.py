@@ -10,7 +10,9 @@ class FieldOfView(object):
     out_of_view_factor is C in the paper.
     """
 
-    def __init__(self, phi=100.0, out_of_view_factor=0.5):
+    def __init__(self, phi=None, out_of_view_factor=None):
+        phi = phi or 100.0
+        out_of_view_factor = out_of_view_factor or 0.5
         self.cosphi = np.cos(phi / 180.0 * np.pi)
         self.out_of_view_factor = out_of_view_factor
 

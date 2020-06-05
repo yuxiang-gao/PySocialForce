@@ -13,10 +13,10 @@ class PedPedPotential(object):
     sigma is in m.
     """
 
-    def __init__(self, delta_t, v0=2.1, sigma=0.3):
+    def __init__(self, delta_t, v0=None, sigma=None):
         self.delta_t = delta_t
-        self.v0 = v0
-        self.sigma = sigma
+        self.v0 = v0 or 2.1
+        self.sigma = sigma or 0.3
 
     def b(self, r_ab, speeds, desired_directions):
         """Calculate b.
@@ -84,10 +84,10 @@ class PedSpacePotential(object):
     r is in m
     """
 
-    def __init__(self, space, u0=10, r=0.2):
+    def __init__(self, space, u0=None, r=None):
         self.space = space or []
-        self.u0 = u0
-        self.r = r
+        self.u0 = u0 or 10
+        self.r = r or 0.2
 
     def value_r_aB(self, r_aB):
         """Compute value parametrized with r_aB."""

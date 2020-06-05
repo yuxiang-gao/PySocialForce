@@ -1,8 +1,7 @@
 """Utility functions to process state."""
 
 import numpy as np
-from collections import namedtuple
-from numba import njit, jit
+from numba import njit
 
 
 @njit
@@ -19,6 +18,10 @@ def desired_directions(state):
 
 @njit
 def normalize(mat):
+    """Normalize nx2 array along the second axis
+    input: [n,2] ndarray
+    output: (normalized vectors, norm factors)
+    """
     norm_factors = []
     for line in mat:
         norm_factors.append(np.linalg.norm(line))
@@ -40,7 +43,7 @@ def vec_diff(state):
 
 @njit
 def speeds(state):
-    #     """Return the speeds corresponding to a given state."""
+    """Return the speeds corresponding to a given state."""
     #     return np.linalg.norm(state[:, 2:4], axis=-1)
     speed_vecs = state[:, 2:4]
     speeds = np.array([np.linalg.norm(s) for s in speed_vecs])
@@ -49,4 +52,5 @@ def speeds(state):
 
 @njit
 def group_center(state):
+    """Center-of-mass of a given group"""
     return np.sum(state[:, 0:2], axis=0) / state.shape[0]

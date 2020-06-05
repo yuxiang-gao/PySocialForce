@@ -1,10 +1,10 @@
 import numpy as np
 import pysocialforce
 from contextlib import contextmanager
+import matplotlib.cm as cm
 
 
 def test_group_crossing():
-    import matplotlib.cm as cm
 
     initial_state = np.array(
         [
