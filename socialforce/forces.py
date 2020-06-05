@@ -1,15 +1,16 @@
+"""Calculate forces for individuals and groups"""
+import re
 import numpy as np
+from abc import ABC, abstractmethod
+from numba import jit, njit
 from . import stateutils
 from .stateutils import normalize, vec_diff
 from .potentials import PedPedPotential, PedSpacePotential
 from .fieldofview import FieldOfView
-from abc import ABC, abstractmethod
-from itertools import combinations
-from numba import jit, njit
 
 
-def to_snake(camel_case_string):
-    import re
+def camel_to_snake(camel_case_string):
+    """Convert CamelCase to snake_case"""
 
     return re.sub(r"(?<!^)(?=[A-Z])", "_", camel_case_string).lower()
 
@@ -19,20 +20,24 @@ class Force(ABC):
 
     def __init__(self):
         super().__init__()
-        self.name = to_snake(type(self).__name__)
+        self.name = camel_to_snake(type(self).__name__)
         self.state = None
         self.groups = None
+        self.goal_vector = None
+        self.initial_speeds = None
         self.factor = 1.0
         self.time_step = 0.4
         self.config = {}
 
     def load_config(self, config_dict):
+        """Load config file in .toml"""
         self.config = config_dict.get(self.name)
         if self.config:
             self.factor = self.config.get("factor")
             self.time_step = config_dict.get("time_step")
 
     def set_state(self, state, groups=None, initial_speeds=None):
+        """Update states and groups"""
         self.state = np.array(state)
         self.groups = groups
         self.goal_vector = stateutils.desired_directions(self.state)  # e
@@ -41,6 +46,9 @@ class Force(ABC):
 
     @abstractmethod
     def get_force(self):
+        """Abstract class to get social forces
+            return: an array of force vectors for each pedestrians
+        """
         raise NotImplementedError
 
 
@@ -59,6 +67,8 @@ class GoalAttractiveForce(Force):
 
 
 class PedRepulsiveForce(Force):
+    """Ped to ped repulsive force"""
+
     def get_force(self):
         potential_func = PedPedPotential(
             self.time_step, v0=self.config["v0"], sigma=self.config["sigma"]
@@ -75,6 +85,8 @@ class PedRepulsiveForce(Force):
 
 
 class SpaceRepulsiveForce(Force):
+    """Space to ped repulsive force"""
+
     def set_space(self, space):
         self.space = space
 
@@ -90,6 +102,8 @@ class SpaceRepulsiveForce(Force):
 
 
 class GroupCoherenceForce(Force):
+    """Group coherence force, paper version"""
+
     def get_force(self):
         forces = np.zeros((self.state.shape[0], 2))
         if self.groups is not None:
@@ -106,6 +120,8 @@ class GroupCoherenceForce(Force):
 
 
 class GroupCoherenceForceAlt(Force):
+    """ Alternative group coherence force as specified in pedsim_ros"""
+
     def get_force(self):
         forces = np.zeros((self.state.shape[0], 2))
         if self.groups is not None:
@@ -115,13 +131,15 @@ class GroupCoherenceForceAlt(Force):
                 member_pos = member_states[:, 0:2]
                 com = stateutils.group_center(member_states)
                 force_vec = com - member_pos
-                vectors, norms = normalize(force_vec)
+                norms = stateutils.speeds(force_vec)
                 softened_factor = (np.tanh(norms - threshold) + 1) / 2
                 forces[group, :] += (force_vec.T * softened_factor).T
         return forces * self.factor
 
 
 class GroupRepulsiveForce(Force):
+    """Group repulsive force"""
+
     def get_force(self):
         threshold = self.config.get("threshold") or 0.5
         forces = np.zeros((self.state.shape[0], 2))
@@ -138,6 +156,8 @@ class GroupRepulsiveForce(Force):
 
 
 class GroupGazeForce(Force):
+    """Group gaze force"""
+
     def get_force(self):
         forces = np.zeros((self.state.shape[0], 2))
         vision_angle = self.config.get("fov_phi") or 100.0

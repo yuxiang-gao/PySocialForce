@@ -7,7 +7,7 @@ with open("socialforce/__init__.py", "r") as f:
 
 
 setup(
-    name="extended-social-force",
+    name="py-social-force",
     version=VERSION,
     packages=find_packages(),
     license="MIT",
@@ -31,6 +31,6 @@ setup(
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: Implementation :: PyPy",
+        "Programming Language :: Python :: 3.8",
     ],
 )

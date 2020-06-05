@@ -11,6 +11,12 @@ Social Force Model
     Dirk Helbing and Péter Molnár
     Phys. Rev. E 51, 4282 – Published 1 May 1995
 
+    The Walking Behaviour of Pedestrian Social Groups and Its Impact on Crowd Dynamics
+    Moussaïd, M., Perozo, N., Garnier, S., Helbing, D., & Theraulaz, G.
+    PLoS ONE, 5(4), 1–7
+
+    pedsim_ros
+
 
 Install and Run
 ===============
