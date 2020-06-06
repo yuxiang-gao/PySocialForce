@@ -1,7 +1,7 @@
 """Test field-of-view computations."""
 
 import numpy as np
-from psf.fieldofview import FieldOfView
+from pysocialforce.fieldofview import FieldOfView
 
 
 def test_w():

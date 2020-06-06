@@ -55,10 +55,14 @@ class Simulator(object):
         if self.config.get("enable_group"):
             self.forces += group_forces
 
+        # initiate forces
         for force in self.forces:
             force.load_config(self.config)
             force.set_state(
-                self.state, groups=self.groups, initial_speeds=self.initial_speeds
+                self.state,
+                groups=self.groups,
+                space=self.space,
+                initial_speeds=self.initial_speeds,
             )
 
     def capped_velocity(self, desired_velocity):
@@ -82,8 +86,6 @@ class Simulator(object):
 
         # Update states
         for force in self.forces:
-            force.set_state(
-                self.state, groups=self.groups, initial_speeds=self.initial_speeds
-            )
+            force.set_state(self.state, groups=self.groups, space=self.space)
 
         return self

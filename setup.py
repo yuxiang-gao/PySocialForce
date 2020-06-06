@@ -7,7 +7,7 @@ with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
 
 # extract version from __init__.py
-with open(" pysocialforce/__init__.py", "r") as f:
+with open("pysocialforce/__init__.py", "r") as f:
     VERSION_LINE = [l for l in f if l.startswith("__version__")][0]
     VERSION = VERSION_LINE.split("=")[1].strip()[1:-1]
 

@@ -12,7 +12,6 @@ def visualize(states, space, output_filename):
     import matplotlib.animation as animation
 
     print("")
-    # writer = animation.FFMpegWriter(fps=15, metadata=dict(artist="Me"), bitrate=1800)
     with psf.show.animation(
         len(states), output_filename, writer="imagemagick"
     ) as context:
