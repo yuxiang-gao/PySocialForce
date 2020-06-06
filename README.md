@@ -5,7 +5,6 @@ dev: [![Build Status](https://travis-ci.com/yuxiang-gao/py-social-force.svg?bran
 
 Extended Social Force Model implemented in NumPy
 
-
 ## Table of Contents
 
 - [py-social-force](#py-social-force)
@@ -36,7 +35,7 @@ It extends the vanilla social force model [[1]](#1) to simulate the walking beha
 - Visualization
 
 ## Installation
- 
+
 1. Clone the py-social-force repo
 
     ```sh
@@ -58,7 +57,6 @@ It extends the vanilla social force model [[1]](#1) to simulate the walking beha
         pytest tests/*.py
     ```
 
-
 ## Usage
 
 Basic usage:
@@ -79,21 +77,22 @@ Default configurations are located in the [config.toml](config.toml) file in roo
 For more examples, please refer to the [examples folder](examples).
 
 ## Examples
+
 ### Ped-ped Scenarios
-|                                           |                                       |
-| ----------------------------------------- | ------------------------------------- |
+
 | ![crossing](images/crossing.png)          | ![narrow](images/narrow_crossing.png) |
+| ----------------------------------------- | ------------------------------------- |
 | ![opposing](image/../images/opposing.png) | ![2opposing](images/2opposing.png)    |
+
 ### Environmental obstacles
-|                                                                                                      |                                                                                                       |
-| ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| ![sperator](images/separator.gif)                                                                    | ![gate](images/gate.gif)                                                                              |
-| Emergent lane formation with Emergent lane formation with 30 pedestrians: ![](images/walkway_30.gif) | Emergent lane formation with Emergent lane formation with 60 pedestrians:  ![](images/walkway_60.gif) |
+
+| ![sperator](images/separator.gif)                                                                             | ![gate](images/gate.gif)                                                                                       |
+| ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Emergent lane formation with Emergent lane formation with 30 pedestrians: ![walkway30](images/walkway_30.gif) | Emergent lane formation with Emergent lane formation with 60 pedestrians:  ![walkway60](images/walkway_60.gif) |
 
 ### Groups
-![](images/group_crossing.png)
 
-
+![group crossing](images/group_crossing.png)
 
 ## License
 
@@ -106,9 +105,9 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## References
 
-<a id="1">[1]</a> Helbing, D., & Molnár, P. (1995). Social force model for pedestrian dynamics. Physical Review E, 51(5), 4282–4286. https://doi.org/10.1103/PhysRevE.51.4282
+<a id="1">[1]</a> Helbing, D., & Molnár, P. (1995). Social force model for pedestrian dynamics. Physical Review E, 51(5), 4282–4286. <https://doi.org/10.1103/PhysRevE.51.4282>
 
-<a id="2">[2]</a> Moussaïd, M., Perozo, N., Garnier, S., Helbing, D., & Theraulaz, G. (2010). The walking behaviour of pedestrian social groups and its impact on crowd dynamics. PLoS ONE, 5(4), 1–7. https://doi.org/10.1371/journal.pone.0010047
+<a id="2">[2]</a> Moussaïd, M., Perozo, N., Garnier, S., Helbing, D., & Theraulaz, G. (2010). The walking behaviour of pedestrian social groups and its impact on crowd dynamics. PLoS ONE, 5(4), 1–7. <https://doi.org/10.1371/journal.pone.0010047>
 
 [socialforce]: https://github.com/svenkreiss/socialforce
 
