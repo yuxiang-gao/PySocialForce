@@ -1,8 +1,9 @@
 """Calculate forces for individuals and groups"""
 import re
-import numpy as np
 from abc import ABC, abstractmethod
-from numba import jit, njit
+
+import numpy as np
+
 from . import stateutils
 from .potentials import PedPedPotential, PedSpacePotential
 from .fieldofview import FieldOfView
@@ -95,7 +96,7 @@ class SpaceRepulsiveForce(Force):
             potential_func = PedSpacePotential(
                 self.space, u0=self.config.get("u0"), r=self.config.get("r")
             )
-            F_aB = -potential_func.grad_r_aB(self.state)
+            F_aB = -1.0 * potential_func.grad_r_aB(self.state)
         return np.sum(F_aB, axis=1) * self.factor
 
 

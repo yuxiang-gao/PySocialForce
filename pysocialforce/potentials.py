@@ -3,7 +3,6 @@
 import numpy as np
 
 from . import stateutils
-from numba import njit
 
 
 class PedPedPotential(object):

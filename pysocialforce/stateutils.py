@@ -46,8 +46,8 @@ def speeds(state):
     """Return the speeds corresponding to a given state."""
     #     return np.linalg.norm(state[:, 2:4], axis=-1)
     speed_vecs = state[:, 2:4]
-    speeds = np.array([np.linalg.norm(s) for s in speed_vecs])
-    return speeds
+    speeds_array = np.array([np.linalg.norm(s) for s in speed_vecs])
+    return speeds_array
 
 
 @njit

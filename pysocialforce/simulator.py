@@ -5,24 +5,41 @@
 See Helbing and Molnár 1998.
 """
 
+import toml
 import numpy as np
 
-from .potentials import PedPedPotential
-from .fieldofview import FieldOfView
-from .forces import *
+from . import forces
 from . import stateutils
-import toml
 
 
-class Simulator(object):
+class Simulator:
     """Simulate social force model.
 
-    Main interface is the state. Every pedestrian is an entry in the state and
-    represented by a vector (x, y, v_x, v_y, d_x, d_y, [tau]).
-    tau is optional in this vector.
-    
-    group_state 
-    each group is represented by a list of indices
+    ...
+
+    Attributes
+    ----------
+    state : np.ndarray [n, 6] or [n, 7]
+       Each entry represents a pedestrian state, (x, y, v_x, v_y, d_x, d_y, [tau])
+    space : np.ndarray
+        Environmental obstacles
+    groups : List of Lists
+        Group members are denoted by their indices in the state
+    config : Dict
+        Loaded from a toml config file
+    time_step : Double
+        Simulation time step, Default: 0.4
+    max_speeds : np.ndarray
+        Maximum speed of pedestrians
+    forces : List
+        Forces to factor in during navigation
+
+    Methods
+    ---------
+    capped_velocity(desired_velcity)
+        Scale down a desired velocity to its capped speed
+    step()
+        Make one step
     """
 
     def __init__(self, state, groups=None, space=None, config_file="config.toml"):
@@ -43,14 +60,14 @@ class Simulator(object):
             self.state = np.concatenate((self.state, np.expand_dims(tau, -1)), axis=-1)
 
         self.forces = [
-            GoalAttractiveForce(),
-            PedRepulsiveForce(),
-            SpaceRepulsiveForce(),
+            forces.GoalAttractiveForce(),
+            forces.PedRepulsiveForce(),
+            forces.SpaceRepulsiveForce(),
         ]
         group_forces = [
-            GroupCoherenceForce(),
-            GroupRepulsiveForce(),
-            GroupGazeForce(),
+            forces.GroupCoherenceForce(),
+            forces.GroupRepulsiveForce(),
+            forces.GroupGazeForce(),
         ]
         if self.config.get("enable_group"):
             self.forces += group_forces
@@ -73,11 +90,11 @@ class Simulator(object):
         return desired_velocity * np.expand_dims(factor, -1)
 
     def step(self):
-        """Step"""
+        """Step."""
         # social forces
-        forces = sum(map(lambda x: x.get_force(), self.forces))
+        sum_forces = sum(map(lambda x: x.get_force(), self.forces))
         # desired velocity
-        desired_velocity = self.state[:, 2:4] + self.time_step * forces
+        desired_velocity = self.state[:, 2:4] + self.time_step * sum_forces
         desired_velocity = self.capped_velocity(desired_velocity)
 
         # update state

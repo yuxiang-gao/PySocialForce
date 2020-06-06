@@ -16,14 +16,15 @@ class FieldOfView(object):
         self.cosphi = np.cos(phi / 180.0 * np.pi)
         self.out_of_view_factor = out_of_view_factor
 
-    def __call__(self, e, f):
+    def __call__(self, desired_direction, forces_direction):
         """Weighting factor for field of view.
 
-        e: desied direction, e is rank 2 and normalized in the last index. 
-        f is a rank 3 tensor.
+        desired_direction : e, rank 2 and normalized in the last index.
+        forces_direction : f, rank 3 tensor.
         """
         in_sight = (
-            np.einsum("aj,abj->ab", e, f) > np.linalg.norm(f, axis=-1) * self.cosphi
+            np.einsum("aj,abj->ab", desired_direction, forces_direction)
+            > np.linalg.norm(forces_direction, axis=-1) * self.cosphi
         )
         out = self.out_of_view_factor * np.ones_like(in_sight)
         out[in_sight] = 1.0
