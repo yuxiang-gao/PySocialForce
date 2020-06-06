@@ -1,4 +1,10 @@
 from setuptools import setup, find_packages
+from os import path
+
+# read the contents of your README file
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
 
 # extract version from __init__.py
 with open(" pysocialforce/__init__.py", "r") as f:
@@ -12,7 +18,8 @@ setup(
     packages=find_packages(),
     license="MIT",
     description="Numpy implementation of the Extended Social Force model.",
-    long_description=open("README.rst").read(),
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author="Sven Kreiss, Yuxiang Gao",
     author_email="me@svenkreiss.com, yuxiang.gao@jhu.edu",
     url="https://github.com/yuxiang-gao/socialforce",

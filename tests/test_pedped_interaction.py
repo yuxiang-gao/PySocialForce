@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-import pysocialforce
+import pysocialforce as psf
 
 
 def test_rab():
     state = np.array([[0.0, 0.0, 0.0, 0.0, 0.0, 1.0], [1.0, 0.0, 0.0, 0.0, 1.0, 1.0],])
-    V = pysocialforce.PedPedPotential(0.4)
+    V = psf.PedPedPotential(0.4)
     assert V.r_ab(state).tolist() == [
         [[0.0, 0.0], [-1.0, 0.0],],
         [[1.0, 0.0], [0.0, 0.0],],
@@ -18,7 +18,7 @@ def test_rab():
 #         [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
 #         [1.0, 0.0, 0.0, 0.0, 1.0, 1.0],
 #     ])
-#     s = pysocialforce.Simulator(initial_state)
+#     s = psf.Simulator(initial_state)
 #     force_at_unit_distance = 0.25  # TODO confirm
 #     assert s.f_ab() == pytest.approx(np.array([[
 #         [0.0, 0.0],
@@ -33,7 +33,7 @@ def test_b_zero_vel():
     r_ab = np.array([[[0.0, 0.0], [-1.0, 0.0],], [[1.0, 0.0], [0.0, 0.0],]])
     speeds = np.array([0.0, 0.0])
     desired_directions = [[1.0, 0.0], [-1.0, 0.0]]
-    V = pysocialforce.PedPedPotential(0.4)
+    V = psf.PedPedPotential(0.4)
     assert V.b(r_ab, speeds, desired_directions).tolist() == [
         [0.0, 1.0],
         [1.0, 0.0],

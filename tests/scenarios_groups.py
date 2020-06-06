@@ -1,7 +1,9 @@
 import numpy as np
-import pysocialforce
+import pysocialforce as psf
 from contextlib import contextmanager
 import matplotlib.cm as cm
+
+OUTPUT_DIR = "images/"
 
 
 def test_group_crossing():
@@ -17,10 +19,10 @@ def test_group_crossing():
     )
     groups = [[0, 1], [2, 3, 4]]
     colors = cm.rainbow(np.linspace(0, 1, len(groups)))
-    s = pysocialforce.Simulator(initial_state, groups=groups)
+    s = psf.Simulator(initial_state, groups=groups)
     states = np.stack([s.step().state.copy() for _ in range(80)])
 
-    with pysocialforce.show.canvas("docs/group_crossing.png") as ax:
+    with psf.show.canvas(OUTPUT_DIR + "group_crossing.png") as ax:
         ax.set_xlabel("x [m]")
         ax.set_ylabel("y [m]")
 
@@ -41,7 +43,7 @@ def visualize(states, space, output_filename):
     import matplotlib.animation as animation
 
     print("")
-    with pysocialforce.show.animation(
+    with psf.show.animation(
         len(states), output_filename, writer="imagemagick"
     ) as context:
         ax = context["ax"]

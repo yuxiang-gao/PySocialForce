@@ -1,17 +1,19 @@
 import numpy as np
-import pysocialforce
+import pysocialforce as psf
+
+OUTPUT_DIR = "images/"
 
 
 def test_crossing():
     initial_state = np.array(
         [[0.0, 0.0, 0.5, 0.5, 10.0, 10.0], [10.0, 0.3, -0.5, 0.5, 0.0, 10.0],]
     )
-    s = pysocialforce.Simulator(initial_state)
+    s = psf.Simulator(initial_state)
     states = np.stack([s.step().state.copy() for _ in range(50)])
 
     # visualize
     print("")
-    with pysocialforce.show.canvas("docs/crossing.png") as ax:
+    with psf.show.canvas(OUTPUT_DIR + "crossing.png") as ax:
         ax.set_xlabel("x [m]")
         ax.set_ylabel("y [m]")
 
@@ -26,12 +28,12 @@ def test_narrow_crossing():
     initial_state = np.array(
         [[0.0, 0.0, 0.5, 0.5, 2.0, 10.0], [2.0, 0.3, -0.5, 0.5, 0.0, 10.0],]
     )
-    s = pysocialforce.Simulator(initial_state)
+    s = psf.Simulator(initial_state)
     states = np.stack([s.step().state.copy() for _ in range(40)])
 
     # visualize
     print("")
-    with pysocialforce.show.canvas("docs/narrow_crossing.png") as ax:
+    with psf.show.canvas(OUTPUT_DIR + "narrow_crossing.png") as ax:
         ax.set_xlabel("x [m]")
         ax.set_ylabel("y [m]")
 
@@ -46,12 +48,12 @@ def test_opposing():
     initial_state = np.array(
         [[0.0, 0.0, 1.0, 0.0, 0.0, 10.0], [-0.3, 10.0, -1.0, 0.0, -0.3, 0.0],]
     )
-    s = pysocialforce.Simulator(initial_state)
+    s = psf.Simulator(initial_state)
     states = np.stack([s.step().state.copy() for _ in range(21)])
 
     # visualize
     print("")
-    with pysocialforce.show.canvas("docs/opposing.png") as ax:
+    with psf.show.canvas(OUTPUT_DIR + "opposing.png") as ax:
         ax.set_xlabel("x [m]")
         ax.set_ylabel("y [m]")
 
@@ -70,12 +72,12 @@ def test_2opposing():
             [2.0, 10.0, -0.5, 0.0, 2.0, 0.0],
         ]
     )
-    s = pysocialforce.Simulator(initial_state)
+    s = psf.Simulator(initial_state)
     states = np.stack([s.step().state.copy() for _ in range(40)])
 
     # visualize
     print("")
-    with pysocialforce.show.canvas("docs/2opposing.png") as ax:
+    with psf.show.canvas(OUTPUT_DIR + "2opposing.png") as ax:
         ax.set_xlabel("x [m]")
         ax.set_ylabel("y [m]")
 
