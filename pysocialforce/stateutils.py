@@ -5,18 +5,6 @@ from numba import njit
 
 
 @njit
-def desired_directions(state):
-    """Given the current state and destination, compute desired direction."""
-    destination_vectors = state[:, 4:6] - state[:, 0:2]
-    directions, norm_factors = normalize(destination_vectors)
-    # directions[norm_factors == 0] = [0, 0] not supported
-    for i in range(norm_factors.shape[0]):
-        if norm_factors[i] == 0:
-            directions[i] = [0, 0]
-    return directions
-
-
-@njit
 def normalize(mat):
     """Normalize nx2 array along the second axis
     input: [n,2] ndarray
@@ -28,6 +16,18 @@ def normalize(mat):
     norm_factors = np.array(norm_factors)
     normalized = mat / np.expand_dims(norm_factors, -1)
     return normalized, norm_factors
+
+
+@njit
+def desired_directions(state):
+    """Given the current state and destination, compute desired direction."""
+    destination_vectors = state[:, 4:6] - state[:, 0:2]
+    directions, norm_factors = normalize(destination_vectors)
+    # directions[norm_factors == 0] = [0, 0] not supported
+    for i in range(norm_factors.shape[0]):
+        if norm_factors[i] == 0:
+            directions[i] = [0, 0]
+    return directions
 
 
 @njit
