@@ -20,7 +20,8 @@ def test_group_crossing():
     groups = [[0, 1], [2, 3, 4]]
     colors = cm.rainbow(np.linspace(0, 1, len(groups)))
     s = psf.Simulator(initial_state, groups=groups)
-    states = np.stack([s.step().state.copy() for _ in range(80)])
+    s.step(80)
+    states = s.get_states()
 
     with psf.show.canvas(OUTPUT_DIR + "group_crossing.png") as ax:
         ax.set_xlabel("x [m]")
@@ -31,9 +32,7 @@ def test_group_crossing():
             for ped in group:
                 x = states[:, ped, 0]
                 y = states[:, ped, 1]
-                ax.plot(
-                    x, y, "-o", label="ped {}".format(ped), markersize=2.5, color=color
-                )
+                ax.plot(x, y, "-o", label="ped {}".format(ped), markersize=2.5, color=color)
         ax.legend()
 
 
@@ -43,9 +42,7 @@ def visualize(states, space, output_filename):
     import matplotlib.animation as animation
 
     print("")
-    with psf.show.animation(
-        len(states), output_filename, writer="imagemagick"
-    ) as context:
+    with psf.show.animation(len(states), output_filename, writer="imagemagick") as context:
         ax = context["ax"]
         ax.set_xlabel("x [m]")
         ax.set_ylabel("y [m]")

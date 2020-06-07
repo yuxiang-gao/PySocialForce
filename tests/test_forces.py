@@ -2,44 +2,47 @@ import numpy as np
 import pytest
 
 from pysocialforce import forces
+from pysocialforce.scene import Scene, PedState
+from pysocialforce.config import DefaultConfig
 
 
 @pytest.fixture()
-def generate_state():
+def generate_scene():
     state = np.zeros((5, 7))
     state[:, :2] = np.array([[1, 1], [1, 1.1], [3, 3], [3, 3.01], [3, 4]])
-    return state
+    config = DefaultConfig()
+    scene = Scene(state, config=config)
+    return scene, config
 
 
-def test_group_rep_force(generate_state):
-    state = generate_state
-    groups = [[1, 0], [3, 2]]
+def test_group_rep_force(generate_scene):
+    scene, config = generate_scene
+    scene.peds.groups = [[1, 0], [3, 2]]
     f = forces.GroupRepulsiveForce()
-    f.config.from_dict({"factor": 1.0, "threshold": 0.5})
-    f.set_state(state, groups=groups)
-    print(f.get_force())
+    f.init(scene, config)
+    f.factor = 1.0
     assert f.get_force() == pytest.approx(
         -np.array([[0.0, -0.1], [0.0, 0.1], [0.0, -0.01], [0.0, 0.01], [0.0, 0.0]])
     )
 
 
-def test_group_coherence_force(generate_state):
-    state = generate_state
-    groups = [[0, 1, 3], [2, 4]]
+def test_group_coherence_force(generate_scene):
+    scene, config = generate_scene
+    scene.peds.groups = [[0, 1, 3], [2, 4]]
     f = forces.GroupCoherenceForce()
-    f.config.from_dict({"factor": 1.0})
-    f.set_state(state, groups=groups)
+    f.init(scene, config)
+    f.factor = 1.0
     assert f.get_force() == pytest.approx(
         np.array([[0.0, 0.0], [0.0, 0.0], [0.0, 1.0], [-0.71421284, -0.69992858], [0.0, -1.0],])
     )
 
 
-def test_group_gaze_force(generate_state):
-    state = generate_state
-    groups = [[0, 1, 3], [2, 4]]
+def test_group_gaze_force(generate_scene):
+    scene, config = generate_scene
+    scene.peds.groups = [[0, 1, 3], [2, 4]]
     f = forces.GroupGazeForce()
-    f.config.from_dict({"factor": 1.0})
-    f.set_state(state, groups=groups)
+    f.init(scene, config)
+    f.factor = 1.0
     assert f.get_force() == pytest.approx(
         np.array(
             [

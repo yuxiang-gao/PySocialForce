@@ -1,9 +1,12 @@
 title = "Social Force Default Config File"
 
 enable_group = true
-time_step = 0.4
+
+[scene]
+timestep = 0.4
 max_speed_multiplier = 1.3
 tau = 0.5
+resolution = 10
 
 [goal_attractive_force]
 factor = 1.0

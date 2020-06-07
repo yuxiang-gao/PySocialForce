@@ -21,31 +21,20 @@ class Force(ABC):
 
     def __init__(self):
         super().__init__()
-        self.state = None
-        self.space = None
-        self.groups = None
-        self.goal_vector = None
-        self.initial_speeds = None
+        self.scene = None
+        self.peds = None
         self.factor = 1.0
-        self.time_step = 0.4
         self.config = Config()
 
-    def load_config(self, config):
-        """Load config"""
+    def init(self, scene, config):
+        """Load config and scene"""
         # load the sub field corresponding to the force name from global confgi file
         self.config = config.sub_config(camel_to_snake(type(self).__name__))
         if self.config:
             self.factor = self.config("factor")
-            self.time_step = config("time_step")
 
-    def set_state(self, state, groups=None, space=None, initial_speeds=None):
-        """Update states and groups"""
-        self.state = state
-        self.space = space
-        self.groups = groups
-        self.goal_vector = stateutils.desired_directions(self.state)  # e
-        if initial_speeds is not None:
-            self.initial_speeds = initial_speeds
+        self.scene = scene
+        self.peds = self.scene.peds
 
     @abstractmethod
     def get_force(self):
@@ -59,9 +48,14 @@ class GoalAttractiveForce(Force):
     """accelerate to desired velocity"""
 
     def get_force(self):
-        vel = self.state[:, 2:4]
-        tau = self.state[:, 6:7]
-        F0 = 1.0 / tau * (np.expand_dims(self.initial_speeds, -1) * self.goal_vector - vel)
+        F0 = (
+            1.0
+            / self.peds.tau()
+            * (
+                np.expand_dims(self.peds.initial_speeds, -1) * self.peds.desired_directions()
+                - self.peds.vel()
+            )
+        )
         return F0 * self.factor
 
 
@@ -70,25 +64,27 @@ class PedRepulsiveForce(Force):
 
     def get_force(self):
         potential_func = PedPedPotential(
-            self.time_step, v0=self.config("v0"), sigma=self.config("sigma"),
+            self.peds.timestep, v0=self.config("v0"), sigma=self.config("sigma"),
         )
-        f_ab = -1.0 * potential_func.grad_r_ab(self.state)
+        f_ab = -1.0 * potential_func.grad_r_ab(self.peds.state)
 
         fov = FieldOfView(phi=self.config("fov_phi"), out_of_view_factor=self.config("fov_factor"),)
-        w = np.expand_dims(fov(self.goal_vector, -f_ab), -1)
+        w = np.expand_dims(fov(self.peds.desired_directions(), -f_ab), -1)
         F_ab = w * f_ab
         return np.sum(F_ab, axis=1) * self.factor
 
 
 class SpaceRepulsiveForce(Force):
-    """Space to ped repulsive force"""
+    """obstacles to ped repulsive force"""
 
     def get_force(self):
-        if self.space is None:
-            F_aB = np.zeros((self.state.shape[0], 0, 2))
+        if self.scene.obstacles is None:
+            F_aB = np.zeros((self.peds.size(), 0, 2))
         else:
-            potential_func = PedSpacePotential(self.space, u0=self.config("u0"), r=self.config("r"))
-            F_aB = -1.0 * potential_func.grad_r_aB(self.state)
+            potential_func = PedSpacePotential(
+                self.scene.obstacles, u0=self.config("u0"), r=self.config("r")
+            )
+            F_aB = -1.0 * potential_func.grad_r_aB(self.peds.state)
         return np.sum(F_aB, axis=1) * self.factor
 
 
@@ -96,13 +92,12 @@ class GroupCoherenceForce(Force):
     """Group coherence force, paper version"""
 
     def get_force(self):
-        forces = np.zeros((self.state.shape[0], 2))
-        if self.groups is not None:
-            for group in self.groups:
+        forces = np.zeros((self.peds.size(), 2))
+        if self.peds.has_group():
+            for group in self.peds.groups:
                 threshold = (len(group) - 1) / 2
-                member_states = self.state[group, :]
-                member_pos = member_states[:, 0:2]
-                com = stateutils.group_center(member_states)
+                member_pos = self.peds.pos()[group, :]
+                com = stateutils.center_of_mass(member_pos)
                 force_vec = com - member_pos
                 vectors, norms = stateutils.normalize(force_vec)
                 vectors[norms < threshold] = [0, 0]
@@ -114,13 +109,12 @@ class GroupCoherenceForceAlt(Force):
     """ Alternative group coherence force as specified in pedsim_ros"""
 
     def get_force(self):
-        forces = np.zeros((self.state.shape[0], 2))
-        if self.groups is not None:
-            for group in self.groups:
+        forces = np.zeros((self.peds.size(), 2))
+        if self.peds.has_group():
+            for group in self.peds.groups:
                 threshold = (len(group) - 1) / 2
-                member_states = self.state[group, :]
-                member_pos = member_states[:, 0:2]
-                com = stateutils.group_center(member_states)
+                member_pos = self.peds.pos()[group, :]
+                com = stateutils.center_of_mass(member_pos)
                 force_vec = com - member_pos
                 norms = stateutils.speeds(force_vec)
                 softened_factor = (np.tanh(norms - threshold) + 1) / 2
@@ -133,10 +127,10 @@ class GroupRepulsiveForce(Force):
 
     def get_force(self):
         threshold = self.config("threshold") or 0.5
-        forces = np.zeros((self.state.shape[0], 2))
-        if self.groups is not None:
-            for group in self.groups:
-                member_pos = self.state[group][:, 0:2]
+        forces = np.zeros((self.peds.size(), 2))
+        if self.peds.has_group():
+            for group in self.peds.groups:
+                member_pos = self.peds.pos()[group, :]
                 for m in stateutils.vec_diff(member_pos):
                     vectors, norms = stateutils.normalize(m)
                     vectors = np.nan_to_num(vectors)
@@ -150,21 +144,20 @@ class GroupGazeForce(Force):
     """Group gaze force"""
 
     def get_force(self):
-        forces = np.zeros((self.state.shape[0], 2))
+        forces = np.zeros((self.peds.size(), 2))
         vision_angle = self.config("fov_phi") or 100.0
-        if self.groups is not None:
-            for group in self.groups:
+        if self.peds.has_group():
+            for group in self.peds.groups:
                 group_size = len(group)
                 # 1-agent groups don't need to compute this
                 if group_size <= 1:
                     continue
-                member_states = self.state[group, :]
-                member_pos = member_states[:, 0:2]
-                member_directions = self.goal_vector[group, :]
+                member_pos = self.peds.pos()[group, :]
+                member_directions = self.peds.desired_directions()[group, :]
                 # use center of mass without the current agent
                 relative_com = np.array(
                     [
-                        stateutils.group_center(member_pos[np.arange(group_size) != i, :])
+                        stateutils.center_of_mass(member_pos[np.arange(group_size) != i, :2])
                         - member_pos[i, :]
                         for i in range(group_size)
                     ]

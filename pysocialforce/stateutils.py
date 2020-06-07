@@ -5,7 +5,7 @@ from numba import njit
 
 
 @njit
-def normalize(mat):
+def normalize(mat: np.ndarray):
     """Normalize nx2 array along the second axis
     input: [n,2] ndarray
     output: (normalized vectors, norm factors)
@@ -19,7 +19,7 @@ def normalize(mat):
 
 
 @njit
-def desired_directions(state):
+def desired_directions(state: np.ndarray):
     """Given the current state and destination, compute desired direction."""
     destination_vectors = state[:, 4:6] - state[:, 0:2]
     directions, norm_factors = normalize(destination_vectors)
@@ -31,7 +31,7 @@ def desired_directions(state):
 
 
 @njit
-def vec_diff(state):
+def vec_diff(state: np.ndarray):
     """r_ab
     r_ab := r_a − r_b.
     """
@@ -42,7 +42,7 @@ def vec_diff(state):
 
 
 @njit
-def speeds(state):
+def speeds(state: np.ndarray):
     """Return the speeds corresponding to a given state."""
     #     return np.linalg.norm(state[:, 2:4], axis=-1)
     speed_vecs = state[:, 2:4]
@@ -51,6 +51,6 @@ def speeds(state):
 
 
 @njit
-def group_center(state):
+def center_of_mass(state: np.ndarray):
     """Center-of-mass of a given group"""
-    return np.sum(state[:, 0:2], axis=0) / state.shape[0]
+    return np.sum(state, axis=0) / state.shape[0]

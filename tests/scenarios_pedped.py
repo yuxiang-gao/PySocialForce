@@ -5,11 +5,10 @@ OUTPUT_DIR = "images/"
 
 
 def test_crossing():
-    initial_state = np.array(
-        [[0.0, 0.0, 0.5, 0.5, 10.0, 10.0], [10.0, 0.3, -0.5, 0.5, 0.0, 10.0],]
-    )
+    initial_state = np.array([[0.0, 0.0, 0.5, 0.5, 10.0, 10.0], [10.0, 0.3, -0.5, 0.5, 0.0, 10.0],])
     s = psf.Simulator(initial_state)
-    states = np.stack([s.step().state.copy() for _ in range(50)])
+    s.step(50)
+    states = s.get_states()
 
     # visualize
     print("")
@@ -25,11 +24,10 @@ def test_crossing():
 
 
 def test_narrow_crossing():
-    initial_state = np.array(
-        [[0.0, 0.0, 0.5, 0.5, 2.0, 10.0], [2.0, 0.3, -0.5, 0.5, 0.0, 10.0],]
-    )
+    initial_state = np.array([[0.0, 0.0, 0.5, 0.5, 2.0, 10.0], [2.0, 0.3, -0.5, 0.5, 0.0, 10.0],])
     s = psf.Simulator(initial_state)
-    states = np.stack([s.step().state.copy() for _ in range(40)])
+    s.step(40)
+    states = s.get_states()
 
     # visualize
     print("")
@@ -45,11 +43,10 @@ def test_narrow_crossing():
 
 
 def test_opposing():
-    initial_state = np.array(
-        [[0.0, 0.0, 1.0, 0.0, 0.0, 10.0], [-0.3, 10.0, -1.0, 0.0, -0.3, 0.0],]
-    )
+    initial_state = np.array([[0.0, 0.0, 1.0, 0.0, 0.0, 10.0], [-0.3, 10.0, -1.0, 0.0, -0.3, 0.0],])
     s = psf.Simulator(initial_state)
-    states = np.stack([s.step().state.copy() for _ in range(21)])
+    s.step(21)
+    states = s.get_states()
 
     # visualize
     print("")
@@ -73,7 +70,8 @@ def test_2opposing():
         ]
     )
     s = psf.Simulator(initial_state)
-    states = np.stack([s.step().state.copy() for _ in range(40)])
+    s.step(40)
+    states = s.get_states()
 
     # visualize
     print("")

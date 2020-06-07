@@ -23,7 +23,7 @@ def canvas(image_file=None, **kwargs):
     fig.set_tight_layout(True)
     if image_file:
         fig.savefig(image_file, dpi=300)
-    fig.show()
+    # fig.show()
     plt.close(fig)
 
 
@@ -42,5 +42,5 @@ def animation(length: int, movie_file=None, writer=None, **kwargs):
     ani = mpl_animation.FuncAnimation(fig, context["update_function"], range(length))
     if movie_file:
         ani.save(movie_file, writer=writer)
-    fig.show()
+    # fig.show()
     plt.close(fig)

@@ -12,9 +12,7 @@ def visualize(states, space, output_filename):
     import matplotlib.animation as animation
 
     print("")
-    with psf.show.animation(
-        len(states), output_filename, writer="imagemagick"
-    ) as context:
+    with psf.show.animation(len(states), output_filename, writer="imagemagick") as context:
         ax = context["ax"]
         ax.set_xlabel("x [m]")
         ax.set_ylabel("y [m]")
@@ -50,14 +48,13 @@ def visualize(states, space, output_filename):
 @pytest.mark.plot
 def test_separator():
     initial_state = np.array([[-10.0, -0.0, 1.0, 0.0, 10.0, 0.0],])
-    space = [
-        np.array([(i, i) for i in np.linspace(-1, 4.0)]),
-    ]
-    s = psf.Simulator(initial_state, space=space)
-    states = np.stack([s.step().state.copy() for _ in range(80)])
+    obstacles = [(-1, 4, -1, 4)]
+    s = psf.Simulator(initial_state, obstacles=obstacles)
+    s.step(80)
+    states = s.get_states()
 
     # visualize
-    with visualize(states, space, OUTPUT_DIR + "separator.gif") as ax:
+    with visualize(states, s.scene.obstacles, OUTPUT_DIR + "separator.gif") as ax:
         ax.set_xlim(-10, 10)
 
 
@@ -77,14 +74,12 @@ def test_gate():
             [10.0, 5.0, -1.0, 0.0, -10.0, 0.0],
         ]
     )
-    space = [
-        np.array([(0.0, y) for y in np.linspace(-10, -0.7, 1000)]),
-        np.array([(0.0, y) for y in np.linspace(0.7, 10, 1000)]),
-    ]
-    s = psf.Simulator(initial_state, space=space)
-    states = np.stack([s.step().state.copy() for _ in range(150)])
+    obstacles = [(0, 0, -10, -0.7), (0, 0, 0.7, 10)]
+    s = psf.Simulator(initial_state, obstacles=obstacles)
+    s.step(150)
+    states = s.get_states()
 
-    with visualize(states, space, OUTPUT_DIR + "gate.gif") as _:
+    with visualize(states, s.scene.obstacles, OUTPUT_DIR + "gate.gif") as _:
         pass
 
 
@@ -100,28 +95,25 @@ def test_walkway(n):
 
     zeros = np.zeros((n, 1))
 
-    state_left = np.concatenate(
-        (pos_left, x_vel_left, zeros, x_destination_left, zeros), axis=-1
-    )
+    state_left = np.concatenate((pos_left, x_vel_left, zeros, x_destination_left, zeros), axis=-1)
     state_right = np.concatenate(
         (pos_right, x_vel_right, zeros, x_destination_right, zeros), axis=-1
     )
     initial_state = np.concatenate((state_left, state_right))
 
-    space = [
-        np.array([(x, 5) for x in np.linspace(-25, 25, num=5000)]),
-        np.array([(x, -5) for x in np.linspace(-25, 25, num=5000)]),
-    ]
-    s = psf.Simulator(initial_state, space=space)
+    obstacles = [(-25, 25, 5, 5), (-25, 25, -5, -5)]
+    s = psf.Simulator(initial_state, obstacles=obstacles)
     states = []
-    for _ in range(250):
-        state = s.step().state
-        # periodic boundary conditions
-        state[state[:, 0] > 25, 0] -= 50
-        state[state[:, 0] < -25, 0] += 50
+    s.step(250)
+    states = s.get_states()
+    # for _ in range(250):
+    #     state = s.step().peds.state
+    #     # periodic boundary conditions
+    #     # state[state[:, 0] > 25, 0] -= 50
+    #     # state[state[:, 0] < -25, 0] += 50
 
-        states.append(state.copy())
-    states = np.stack(states)
+    #     states.append(state.copy())
+    # states = np.stack(states)
 
-    with visualize(states, space, OUTPUT_DIR + "walkway_{}.gif".format(n)) as _:
+    with visualize(states, s.scene.obstacles, OUTPUT_DIR + "walkway_{}.gif".format(n)) as _:
         pass
