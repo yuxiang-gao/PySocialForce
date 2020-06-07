@@ -1,4 +1,4 @@
-title = "Social Force Config File"
+title = "Social Force Default Config File"
 
 enable_group = true
 time_step = 0.4

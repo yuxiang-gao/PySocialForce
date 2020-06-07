@@ -1,5 +1,5 @@
-import pysocialforce as psf
 import numpy as np
+import pysocialforce as psf
 
 
 if __name__ == "__main__":

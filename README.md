@@ -10,7 +10,7 @@ Extended Social Force Model implemented in NumPy
 - [py-social-force](#py-social-force)
   - [Table of Contents](#table-of-contents)
   - [About The Project](#about-the-project)
-    - [Features](#features)
+    - [Roadmap](#roadmap)
   - [Installation](#installation)
   - [Usage](#usage)
   - [Examples](#examples)
@@ -26,13 +26,16 @@ Extended Social Force Model implemented in NumPy
 This project is a NumPy implementation of the **Extended Social Force Model** [[2]](#2).
 It extends the vanilla social force model [[1]](#1) to simulate the walking behaviour of pedestrian social groups.
 
-### Features
+### Roadmap
 
-- Simulation of indiviual pedestrians
-- Social groups simulation
-- Environmental obstacles
-- Easy configuration with toml file
-- Visualization
+- [x] Simulation of indiviual pedestrians
+- [x] Social groups simulation
+- [ ] Inter-group interactions
+- [x] Environmental obstacles
+- [ ] Better environment representation
+- [x] Easy configuration with toml file
+- [ ] Visualization of indiviuals and groups
+- [ ] Visualization of forces/potentials
 
 ## Installation
 

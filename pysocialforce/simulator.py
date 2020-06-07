@@ -1,8 +1,8 @@
 # coding=utf-8
 
-"""Synthetic pedestrian behavior according to the Social Force model.
+"""Synthetic pedestrian behavior with social groups simulation according to the Extended Social Force model.
 
-See Helbing and Molnár 1998.
+See Helbing and Molnár 1998 and Moussaïd et al. 2010
 """
 
 import toml
@@ -42,7 +42,9 @@ class Simulator:
         Make one step
     """
 
-    def __init__(self, state, groups=None, space=None, config_file="config.toml"):
+    def __init__(
+        self, state, groups=None, space=None, config_file="config/default.toml"
+    ):
         self.state = state
         self.groups = groups
         self.space = space
