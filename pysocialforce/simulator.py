@@ -42,9 +42,7 @@ class Simulator:
         Make one step
     """
 
-    def __init__(
-        self, state, groups=None, space=None, config_file="config/default.toml"
-    ):
+    def __init__(self, state, groups=None, space=None, config_file="config/default.toml"):
         self.state = state
         self.groups = groups
         self.space = space
