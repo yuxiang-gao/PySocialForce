@@ -68,7 +68,7 @@ Basic usage:
 import pysocialforce as psf
 # initiate simulator
 sim = psf.Simulator(
-        initial_state, groups=groups, space=space, config_file="config.toml"
+        initial_state, groups=groups, obstacles=obstacles, config_file="config.toml"
     )
 # do one update
 sim.step()
