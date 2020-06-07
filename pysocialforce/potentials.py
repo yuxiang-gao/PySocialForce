@@ -71,16 +71,16 @@ class PedPedPotential(object):
 
 
 class PedSpacePotential(object):
-    """Pedestrian-space interaction potential.
+    """Pedestrian-obstacles interaction potential.
 
-    space is a list of numpy arrays containing points of boundaries.
+    obstacles is a list of numpy arrays containing points of boundaries.
 
     u0 is in m^2 / s^2.
     r is in m
     """
 
-    def __init__(self, space, u0=None, r=None):
-        self.space = space or []
+    def __init__(self, obstacles, u0=None, r=None):
+        self.obstacles = obstacles or []
         self.u0 = u0 or 10
         self.r = r or 0.2
 
@@ -90,16 +90,16 @@ class PedSpacePotential(object):
 
     def r_aB(self, state):
         """r_aB"""
-        if not self.space:
+        if not self.obstacles:
             return np.zeros((state.shape[0], 0, 2))
 
         r_a = np.expand_dims(state[:, 0:2], 1)
         closest_i = [
             np.argmin(np.linalg.norm(r_a - np.expand_dims(B, 0), axis=-1), axis=1)
-            for B in self.space
+            for B in self.obstacles
         ]
         closest_points = np.swapaxes(
-            np.stack([B[i] for B, i in zip(self.space, closest_i)]), 0, 1
+            np.stack([B[i] for B, i in zip(self.obstacles, closest_i)]), 0, 1
         )  # index order: pedestrian, boundary, coordinates
         return r_a - closest_points
 

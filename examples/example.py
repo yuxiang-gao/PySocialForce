@@ -16,11 +16,10 @@ if __name__ == "__main__":
     # group informoation is represented as listes of indices of the members
     groups = [[0, 1], [2, 3, 4]]
     # initiate the simulator,
-    s = psf.Simulator(
-        initial_state, groups=groups, space=None, config_file="config.toml"
-    )
+    s = psf.Simulator(initial_state, groups=groups, obstacles=None, config_file="config.toml")
     # update 80 steps
-    states = np.stack([s.step().state.copy() for _ in range(80)])
+    s.step(80)
+    states = s.get_states()
 
     # plot
     with psf.show.canvas("images/exmaple.png") as ax:
