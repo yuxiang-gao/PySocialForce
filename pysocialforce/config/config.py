@@ -1,4 +1,5 @@
 """Config"""
+from pathlib import Path
 from typing import Dict
 import toml
 
@@ -45,4 +46,5 @@ class DefaultConfig(Config):
     """Default configs"""
 
     def __init__(self, default_config="default.toml"):
-        super().__init__(toml.load(default_config))
+        config_dir = Path(__file__).resolve().parent
+        super().__init__(toml.load(config_dir.joinpath(default_config)))
