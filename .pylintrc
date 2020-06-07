@@ -29,4 +29,4 @@ ignored-modules=numpy
 ignored-classes=numpy
 
 
-disable=useless-object-inheritance,too-many-instance-attributes,too-few-public-methods,too-many-arguments
+disable=useless-object-inheritance,too-many-instance-attributes,too-few-public-methods,too-many-arguments,line-too-long
