@@ -5,11 +5,11 @@
 See Helbing and Molnár 1998 and Moussaïd et al. 2010
 """
 
-import toml
 import numpy as np
 
-from . import forces
-from . import stateutils
+from pysocialforce import forces
+from pysocialforce import stateutils
+from pysocialforce.config import DefaultConfig
 
 
 class Simulator:
@@ -42,19 +42,21 @@ class Simulator:
         Make one step
     """
 
-    def __init__(self, state, groups=None, space=None, config_file="config/default.toml"):
+    def __init__(self, state, groups=None, space=None, config_file=None):
         self.state = state
         self.groups = groups
         self.space = space
-        self.config = toml.load(config_file)
+        self.config = DefaultConfig()
+        if config_file:
+            self.config.load_config(config_file)
 
-        self.time_step = self.config.get("time_step") or 0.4
+        self.time_step = self.config("time_step") or 0.4
 
         self.initial_speeds = stateutils.speeds(self.state)
-        self.max_speeds = self.config.get("max_speed_multiplier") * self.initial_speeds
+        self.max_speeds = self.config("max_speed_multiplier") * self.initial_speeds
 
         if self.state.shape[1] < 7:
-            tau = self.config.get("tau") or 0.5
+            tau = self.config("tau") or 0.5
             if not hasattr(tau, "shape"):
                 tau = tau * np.ones(self.state.shape[0])
             self.state = np.concatenate((self.state, np.expand_dims(tau, -1)), axis=-1)
@@ -69,7 +71,7 @@ class Simulator:
             forces.GroupRepulsiveForce(),
             forces.GroupGazeForce(),
         ]
-        if self.config.get("enable_group"):
+        if self.config("enable_group"):
             self.forces += group_forces
 
         # initiate forces

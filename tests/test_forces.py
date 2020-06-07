@@ -15,7 +15,7 @@ def test_group_rep_force(generate_state):
     state = generate_state
     groups = [[1, 0], [3, 2]]
     f = forces.GroupRepulsiveForce()
-    f.config = {"factor": 1.0, "threshold": 0.5}
+    f.config.from_dict({"factor": 1.0, "threshold": 0.5})
     f.set_state(state, groups=groups)
     print(f.get_force())
     assert f.get_force() == pytest.approx(
@@ -27,18 +27,10 @@ def test_group_coherence_force(generate_state):
     state = generate_state
     groups = [[0, 1, 3], [2, 4]]
     f = forces.GroupCoherenceForce()
-    f.config = {"factor": 1.0}
+    f.config.from_dict({"factor": 1.0})
     f.set_state(state, groups=groups)
     assert f.get_force() == pytest.approx(
-        np.array(
-            [
-                [0.0, 0.0],
-                [0.0, 0.0],
-                [0.0, 1.0],
-                [-0.71421284, -0.69992858],
-                [0.0, -1.0],
-            ]
-        )
+        np.array([[0.0, 0.0], [0.0, 0.0], [0.0, 1.0], [-0.71421284, -0.69992858], [0.0, -1.0],])
     )
 
 
@@ -46,7 +38,7 @@ def test_group_gaze_force(generate_state):
     state = generate_state
     groups = [[0, 1, 3], [2, 4]]
     f = forces.GroupGazeForce()
-    f.config = {"factor": 1.0}
+    f.config.from_dict({"factor": 1.0})
     f.set_state(state, groups=groups)
     assert f.get_force() == pytest.approx(
         np.array(

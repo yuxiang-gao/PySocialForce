@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from . import stateutils
+from pysocialforce import stateutils
 
 
 class PedPedPotential(object):
@@ -24,9 +24,7 @@ class PedPedPotential(object):
         2b=sqrt((r_ab+(r_ab-v*delta_t*e_b))
         """
         speeds_b = np.expand_dims(speeds, axis=0)
-        speeds_b_abc = np.expand_dims(
-            speeds_b, axis=2
-        )  # abc = alpha, beta, coordinates
+        speeds_b_abc = np.expand_dims(speeds_b, axis=2)  # abc = alpha, beta, coordinates
         e_b = np.expand_dims(desired_directions, axis=0)
 
         in_sqrt = (
@@ -50,9 +48,7 @@ class PedPedPotential(object):
 
     def __call__(self, state):
         speeds = stateutils.speeds(state)
-        return self.value_r_ab(
-            self.r_ab(state), speeds, stateutils.desired_directions(state)
-        )
+        return self.value_r_ab(self.r_ab(state), speeds, stateutils.desired_directions(state))
 
     def grad_r_ab(self, state, delta=1e-3):
         """Compute gradient wrt r_ab using finite difference differentiation."""

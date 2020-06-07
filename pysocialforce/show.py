@@ -28,7 +28,7 @@ def canvas(image_file=None, **kwargs):
 
 
 @contextmanager
-def animation(n, movie_file=None, writer=None, **kwargs):
+def animation(length: int, movie_file=None, writer=None, **kwargs):
     """Context for animations."""
     fig, ax = plt.subplots(**kwargs)
     fig.set_tight_layout(True)
@@ -39,7 +39,7 @@ def animation(n, movie_file=None, writer=None, **kwargs):
     context = {"ax": ax, "update_function": None}
     yield context
 
-    ani = mpl_animation.FuncAnimation(fig, context["update_function"], range(n))
+    ani = mpl_animation.FuncAnimation(fig, context["update_function"], range(length))
     if movie_file:
         ani.save(movie_file, writer=writer)
     fig.show()

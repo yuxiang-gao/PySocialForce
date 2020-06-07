@@ -4,9 +4,10 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from . import stateutils
-from .potentials import PedPedPotential, PedSpacePotential
-from .fieldofview import FieldOfView
+from pysocialforce import stateutils
+from pysocialforce.potentials import PedPedPotential, PedSpacePotential
+from pysocialforce.fieldofview import FieldOfView
+from pysocialforce.config import Config
 
 
 def camel_to_snake(camel_case_string):
@@ -20,7 +21,6 @@ class Force(ABC):
 
     def __init__(self):
         super().__init__()
-        self.name = camel_to_snake(type(self).__name__)
         self.state = None
         self.space = None
         self.groups = None
@@ -28,14 +28,15 @@ class Force(ABC):
         self.initial_speeds = None
         self.factor = 1.0
         self.time_step = 0.4
-        self.config = {}
+        self.config = Config()
 
-    def load_config(self, config_dict):
-        """Load config file in .toml"""
-        self.config = config_dict.get(self.name)
+    def load_config(self, config):
+        """Load config"""
+        # load the sub field corresponding to the force name from global confgi file
+        self.config = config.sub_config(camel_to_snake(type(self).__name__))
         if self.config:
-            self.factor = self.config.get("factor")
-            self.time_step = config_dict.get("time_step")
+            self.factor = self.config("factor")
+            self.time_step = config("time_step")
 
     def set_state(self, state, groups=None, space=None, initial_speeds=None):
         """Update states and groups"""
@@ -60,11 +61,7 @@ class GoalAttractiveForce(Force):
     def get_force(self):
         vel = self.state[:, 2:4]
         tau = self.state[:, 6:7]
-        F0 = (
-            1.0
-            / tau
-            * (np.expand_dims(self.initial_speeds, -1) * self.goal_vector - vel)
-        )
+        F0 = 1.0 / tau * (np.expand_dims(self.initial_speeds, -1) * self.goal_vector - vel)
         return F0 * self.factor
 
 
@@ -73,14 +70,11 @@ class PedRepulsiveForce(Force):
 
     def get_force(self):
         potential_func = PedPedPotential(
-            self.time_step, v0=self.config.get("v0"), sigma=self.config.get("sigma"),
+            self.time_step, v0=self.config("v0"), sigma=self.config("sigma"),
         )
         f_ab = -1.0 * potential_func.grad_r_ab(self.state)
 
-        fov = FieldOfView(
-            phi=self.config.get("fov_phi"),
-            out_of_view_factor=self.config.get("fov_factor"),
-        )
+        fov = FieldOfView(phi=self.config("fov_phi"), out_of_view_factor=self.config("fov_factor"),)
         w = np.expand_dims(fov(self.goal_vector, -f_ab), -1)
         F_ab = w * f_ab
         return np.sum(F_ab, axis=1) * self.factor
@@ -93,9 +87,7 @@ class SpaceRepulsiveForce(Force):
         if self.space is None:
             F_aB = np.zeros((self.state.shape[0], 0, 2))
         else:
-            potential_func = PedSpacePotential(
-                self.space, u0=self.config.get("u0"), r=self.config.get("r")
-            )
+            potential_func = PedSpacePotential(self.space, u0=self.config("u0"), r=self.config("r"))
             F_aB = -1.0 * potential_func.grad_r_aB(self.state)
         return np.sum(F_aB, axis=1) * self.factor
 
@@ -140,7 +132,7 @@ class GroupRepulsiveForce(Force):
     """Group repulsive force"""
 
     def get_force(self):
-        threshold = self.config.get("threshold") or 0.5
+        threshold = self.config("threshold") or 0.5
         forces = np.zeros((self.state.shape[0], 2))
         if self.groups is not None:
             for group in self.groups:
@@ -159,7 +151,7 @@ class GroupGazeForce(Force):
 
     def get_force(self):
         forces = np.zeros((self.state.shape[0], 2))
-        vision_angle = self.config.get("fov_phi") or 100.0
+        vision_angle = self.config("fov_phi") or 100.0
         if self.groups is not None:
             for group in self.groups:
                 group_size = len(group)
@@ -172,9 +164,7 @@ class GroupGazeForce(Force):
                 # use center of mass without the current agent
                 relative_com = np.array(
                     [
-                        stateutils.group_center(
-                            member_pos[np.arange(group_size) != i, :]
-                        )
+                        stateutils.group_center(member_pos[np.arange(group_size) != i, :])
                         - member_pos[i, :]
                         for i in range(group_size)
                     ]
@@ -183,10 +173,7 @@ class GroupGazeForce(Force):
                 com_directions, _ = stateutils.normalize(relative_com)
                 # angle between walking direction and center of mass
                 com_angles = np.degrees(
-                    [
-                        np.arccos(np.dot(d, c))
-                        for d, c in zip(member_directions, com_directions)
-                    ]
+                    [np.arccos(np.dot(d, c)) for d, c in zip(member_directions, com_directions)]
                 )
                 rotation = np.radians(
                     [a - vision_angle if a > vision_angle else 0.0 for a in com_angles]
