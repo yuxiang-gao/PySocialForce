@@ -3,8 +3,8 @@ from typing import List
 
 import numpy as np
 
-from pysocialforce import stateutils
-from pysocialforce.config import DefaultConfig
+from pysocialforce.utils import stateutils
+from pysocialforce.utils import DefaultConfig
 
 
 class PedState:
@@ -42,6 +42,9 @@ class PedState:
             self.initial_speeds = self.speeds()
             self.max_speeds = self.max_speed_multiplier * self.initial_speeds
         self.ped_states.append(self._state.copy())
+
+    def get_states(self):
+        return np.stack(self.ped_states), self.group_states
 
     def size(self):
         return self.state.shape[0]
@@ -127,6 +130,16 @@ class Scene:
         # initiate agents
 
         self.peds = PedState(state, groups, self.config)
+        # expose ped state and groups
+        self.state = self.peds.state
+        self.groups = self.peds.groups
+
+    def get_states(self):
+        """Expose whole state"""
+        return self.peds.get_states()
+
+    def get_length(self):
+        return len(self.get_states()[0])
 
     @property
     def obstacles(self) -> List[np.ndarray]:
