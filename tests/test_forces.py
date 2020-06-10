@@ -3,7 +3,7 @@ import pytest
 
 from pysocialforce import forces
 from pysocialforce.scene import Scene, PedState
-from pysocialforce.config import DefaultConfig
+from pysocialforce.utils import DefaultConfig
 
 
 @pytest.fixture()

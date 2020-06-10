@@ -114,17 +114,6 @@ class SceneVisualizer:
     def animate(self):
         """Main method to create animation"""
 
-        # x, y limit from states, only for animation
-        margin = 2.0
-        xy_limits = np.array(
-            [minmax(state) for state in self.states]
-        )  # (x_min, y_min, x_max, y_max)
-        xy_min = np.min(xy_limits[:, :2]) - margin
-        xy_max = np.max(xy_limits[:, 2:4]) + margin
-        logger.debug(xy_min)
-        logger.debug(xy_max)
-        self.ax.set(xlim=(xy_min, xy_max), ylim=(xy_min, xy_max))
-
         self.ani = mpl_animation.FuncAnimation(
             self.fig,
             init_func=self.animation_init,
@@ -133,17 +122,13 @@ class SceneVisualizer:
             blit=True,
         )
 
-        # recompute the ax.dataLim
-        self.ax.relim()
-        # update ax.viewLim using the new dataLim
-        self.ax.autoscale_view()
         return self.ani
 
     def __enter__(self):
         logger.info("Start plotting.")
         self.fig.set_tight_layout(True)
         self.ax.grid(linestyle="dotted")
-        self.ax.set_aspect("equal", "datalim")
+        self.ax.set_aspect("equal")
         self.ax.margins(2.0)
         self.ax.set_axisbelow(True)
         self.ax.set_xlabel("x [m]")
@@ -151,6 +136,19 @@ class SceneVisualizer:
 
         plt.rcParams["animation.html"] = "jshtml"
 
+        # x, y limit from states, only for animation
+        margin = 2.0
+        xy_limits = np.array(
+            [minmax(state) for state in self.states]
+        )  # (x_min, y_min, x_max, y_max)
+        xy_min = np.min(xy_limits[:, :2], axis=0) - margin
+        xy_max = np.max(xy_limits[:, 2:4], axis=0) + margin
+        self.ax.set(xlim=(xy_min[0], xy_max[0]), ylim=(xy_min[1], xy_max[1]))
+
+        # # recompute the ax.dataLim
+        # self.ax.relim()
+        # # update ax.viewLim using the new dataLim
+        # self.ax.autoscale_view()
         return self
 
     def __exit__(self, exception_type, exception_value, traceback):
@@ -181,7 +179,8 @@ class SceneVisualizer:
         if self.human_actors:
             for i, human in enumerate(self.human_actors):
                 human.center = current_state[i, :2]
-                human.set_radius(radius[i])
+                human.set_radius(0.2)
+                # human.set_radius(radius[i])
         else:
             self.human_actors = [
                 Circle(pos, radius=r) for pos, r in zip(current_state[:, :2], radius)
