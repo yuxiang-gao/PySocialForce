@@ -1,7 +1,7 @@
 [BASIC]
 
 variable-rgx=[a-z0-9_]{1,30}$
-good-names=b,e,f,f_aB,F0,F_ab,F_aB,F,grad_r_aB,i,n,nx,ny,xy,r,r_aB,U,u0,V,v0,value_r_ab,value_r_aB,w
+good-names=ax,b,e,f,f_aB,F0,F_ab,F_aB,F,grad_r_aB,i,n,nx,ny,xy,r,r_aB,U,u0,V,v0,value_r_ab,value_r_aB,w
 
 [MASTER]
 
@@ -29,4 +29,4 @@ ignored-modules=numpy
 ignored-classes=numpy
 
 
-disable=useless-object-inheritance,too-many-instance-attributes,too-few-public-methods,too-many-arguments,line-too-long,missing-function-docstring,fixme,logging-fstring-interpolation
+disable=useless-object-inheritance,too-many-instance-attributes,too-few-public-methods,too-many-arguments,line-too-long,missing-function-docstring,fixme,logging-fstring-interpolation,no-member

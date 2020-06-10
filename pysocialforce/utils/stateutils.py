@@ -54,3 +54,12 @@ def speeds(state: np.ndarray):
 def center_of_mass(state: np.ndarray):
     """Center-of-mass of a given group"""
     return np.sum(state, axis=0) / state.shape[0]
+
+
+@njit
+def minmax(state):
+    x_min = np.min(state[:, 0])
+    y_min = np.min(state[:, 1])
+    x_max = np.max(state[:, 0])
+    y_max = np.max(state[:, 1])
+    return (x_min, y_min, x_max, y_max)

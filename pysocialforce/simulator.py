@@ -4,12 +4,11 @@
 
 See Helbing and Molnár 1998 and Moussaïd et al. 2010
 """
-import numpy as np
-
 from pysocialforce import forces
-from pysocialforce.config import DefaultConfig
+from pysocialforce.utils import DefaultConfig
 from pysocialforce.scene import Scene
-from pysocialforce.utils import timeit
+
+# from pysocialforce.utils import timeit
 
 
 class Simulator:
@@ -80,11 +79,7 @@ class Simulator:
 
         return self
 
-    @timeit
     def step(self, n=1):
         for _ in range(n):
             self.step_once()
         return self
-
-    def get_states(self):
-        return np.stack(self.peds.ped_states)

@@ -2,7 +2,7 @@
 
 __version__ = "0.1.0"
 
-from pysocialforce.simulator import Simulator
-from pysocialforce.potentials import PedPedPotential, PedSpacePotential
-from pysocialforce import forces
-from pysocialforce import show
+from .simulator import Simulator
+from .potentials import PedPedPotential, PedSpacePotential
+from .forces import *
+from .utils import plot

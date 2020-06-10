@@ -32,6 +32,6 @@ factor = 1.0
 threshold = 0.5
 
 [group_gaze_force]
-factor = 2.0
+factor = 3.0
 # fov params
 fov_phi = 100.0
