@@ -1,4 +1,4 @@
-# py-social-force
+# PySocialForce
 
 master: [![Build Status](https://travis-ci.com/yuxiang-gao/py-social-force.svg?branch=master)](https://travis-ci.com/yuxiang-gao/py-social-force)
 dev: [![Build Status](https://travis-ci.com/yuxiang-gao/py-social-force.svg?branch=dev)](https://travis-ci.com/yuxiang-gao/py-social-force)
@@ -7,7 +7,7 @@ Extended Social Force Model implemented in NumPy
 
 ## Table of Contents
 
-- [py-social-force](#py-social-force)
+- [PySocialForce](#pysocialforce)
   - [Table of Contents](#table-of-contents)
   - [About The Project](#about-the-project)
     - [Roadmap](#roadmap)
@@ -39,20 +39,20 @@ It extends the vanilla social force model [[1]](#1) to simulate the walking beha
 
 ## Installation
 
-1. Clone the py-social-force repo
+1. Clone the PySocialForce repo
 
     ```sh
-    git clone https://github.com/yuxiang-ago/py-social-force.git
+    git clone https://github.com/yuxiang-ago/PySocialForce.git
     ```
 
 2. (optional) Create a python virtual environment and activate it
 3. Install the pip package
 
     ```sh
-        # install from PyPI
-        pip install 'py-social-force[test,plot]'
+        # Option 1: install from PyPI
+        pip install 'pysocialforce[test,plot]'
 
-        # or install from source
+        # Option 2:  install from source
         pip install -e '.[test,plot]'
 
         # run linting and tests
