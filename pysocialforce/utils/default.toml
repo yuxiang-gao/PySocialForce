@@ -3,16 +3,17 @@ title = "Social Force Default Config File"
 enable_group = true
 
 [scene]
-timestep = 0.4
+agent_radius = 0.35
+step_width = 0.4
 max_speed_multiplier = 1.3
 tau = 0.5
 resolution = 10
 
 [goal_attractive_force]
-factor = 1.0
+factor = 1
 
 [ped_repulsive_force]
-factor = 1.0
+factor = 1.5
 v0 = 2.1
 sigma = 0.3
 # fov params
@@ -20,7 +21,7 @@ fov_phi = 100.0
 fov_factor = 0.5 # out of view factor
 
 [space_repulsive_force]
-factor = 1.0
+factor = 3
 u0 = 10
 r = 0.2
 

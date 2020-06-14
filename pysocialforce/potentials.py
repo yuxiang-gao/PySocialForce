@@ -44,7 +44,7 @@ class PedPedPotential(object):
         """r_ab
         r_ab := r_a − r_b.
         """
-        return stateutils.vec_diff(state)
+        return stateutils.vec_diff(state[:, :2])
 
     def __call__(self, state):
         speeds = stateutils.speeds(state)

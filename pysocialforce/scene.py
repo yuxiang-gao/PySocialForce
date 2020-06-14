@@ -12,7 +12,7 @@ class PedState:
 
     def __init__(self, state, groups, config):
         self.default_tau = config("tau")
-        self.timestep = config("timestep")
+        self.step_width = config("step_width")
         self.max_speed_multiplier = config("max_speed_multiplier")
 
         self.max_speeds = None
@@ -65,12 +65,12 @@ class PedState:
     def step(self, force, groups=None):
         """Move peds according to forces"""
         # desired velocity
-        desired_velocity = self.vel() + self.timestep * force
+        desired_velocity = self.vel() + self.step_width * force
         desired_velocity = self.capped_velocity(desired_velocity, self.max_speeds)
 
         # update state
         next_state = self.state
-        next_state[:, 0:2] += desired_velocity * self.timestep
+        next_state[:, 0:2] += desired_velocity * self.step_width
         next_state[:, 2:4] = desired_velocity
         next_groups = self.groups
         if groups is not None:

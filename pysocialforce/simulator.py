@@ -26,7 +26,7 @@ class Simulator:
         Group members are denoted by their indices in the state
     config : Dict
         Loaded from a toml config file
-    timestep : Double
+    step_width : Double
         Simulation time step, Default: 0.4
     max_speeds : np.ndarray
         Maximum speed of pedestrians
@@ -49,7 +49,7 @@ class Simulator:
         self.scene = Scene(state, groups, obstacles, self.config)
         self.peds = self.scene.peds
 
-        self.timestep = self.config("timestep") or 0.4
+        self.step_width = self.config("step_width") or 0.4
 
         self.forces = [
             forces.GoalAttractiveForce(),
