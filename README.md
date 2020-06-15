@@ -1,7 +1,7 @@
 # PySocialForce
 
-master: [![Build Status](https://travis-ci.com/yuxiang-gao/py-social-force.svg?branch=master)](https://travis-ci.com/yuxiang-gao/py-social-force)
-dev: [![Build Status](https://travis-ci.com/yuxiang-gao/py-social-force.svg?branch=dev)](https://travis-ci.com/yuxiang-gao/py-social-force)
+master: [![Build Status](https://travis-ci.com/yuxiang-gao/PySocialForce.svg?branch=master)](https://travis-ci.com/yuxiang-gao/PySocialForce)
+dev: [![Build Status](https://travis-ci.com/yuxiang-gao/PySocialForce.svg?branch=dev)](https://travis-ci.com/yuxiang-gao/PySocialForce)
 
 Extended Social Force Model implemented in NumPy
 
@@ -34,7 +34,7 @@ It extends the vanilla social force model [[1]](#1) to simulate the walking beha
 - [x] Environmental obstacles
 - [ ] Better environment representation
 - [x] Easy configuration with toml file
-- [ ] Visualization of indiviuals and groups
+- [x] Visualization of indiviuals and groups
 - [ ] Visualization of forces/potentials
 
 ## Installation
@@ -42,7 +42,7 @@ It extends the vanilla social force model [[1]](#1) to simulate the walking beha
 1. Clone the PySocialForce repo
 
     ```sh
-    git clone https://github.com/yuxiang-ago/PySocialForce.git
+    git clone https://github.com/yuxiang-gao/PySocialForce.git
     ```
 
 2. (optional) Create a python virtual environment and activate it
@@ -70,8 +70,8 @@ import pysocialforce as psf
 sim = psf.Simulator(
         initial_state, groups=groups, obstacles=obstacles, config_file="config.toml"
     )
-# do one update
-sim.step()
+# do 50 updates
+sim.step(n=50)
 ```
 
 You can configure the parameters by passing in a [toml](https://github.com/toml-lang/toml) file.
@@ -104,7 +104,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 ## Acknowledgements
 
 - This project is based on [svenkreiss](https://github.com/svenkreiss)'s implementation of the vanilla social force model.
-- The group forces drewn inspiration from the [pedsim_ros][pedsim_ros] package.
+- The implementation of forces drew inspiration from the [pedsim_ros][pedsim_ros] package.
 
 ## References
 
