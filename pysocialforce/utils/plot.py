@@ -175,7 +175,8 @@ class SceneVisualizer:
         """
         states, _ = self.scene.get_states()
         current_state = states[step]
-        radius = 0.2 + np.linalg.norm(current_state[:, 2:4], axis=-1) / 2.0 * 0.3
+        # radius = 0.2 + np.linalg.norm(current_state[:, 2:4], axis=-1) / 2.0 * 0.3
+        radius = [0.2] * current_state.shape[0]
         if self.human_actors:
             for i, human in enumerate(self.human_actors):
                 human.center = current_state[i, :2]
