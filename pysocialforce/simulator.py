@@ -4,7 +4,7 @@
 
 See Helbing and Molnár 1998 and Moussaïd et al. 2010
 """
-from pysocialforce.utils import DefaultConfig, logger, stateutils
+from pysocialforce.utils import DefaultConfig
 from pysocialforce.scene import PedState, EnvState
 from pysocialforce import forces
 

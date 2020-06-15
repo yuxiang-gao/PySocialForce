@@ -123,6 +123,8 @@ class PedState:
 
 
 class EnvState:
+    """State of the environment obstacles"""
+
     def __init__(self, obstacles, resolution=10):
         self.resolution = resolution
         self.obstacles = obstacles
