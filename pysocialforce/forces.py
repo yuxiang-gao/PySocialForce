@@ -4,9 +4,9 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 
-from . import stateutils
-from .potentials import PedPedPotential, PedSpacePotential
-from .fieldofview import FieldOfView
+from pysocialforce.potentials import PedPedPotential, PedSpacePotential
+from pysocialforce.fieldofview import FieldOfView
+from pysocialforce.utils import Config, stateutils, logger
 
 
 def camel_to_snake(camel_case_string):
@@ -20,50 +20,46 @@ class Force(ABC):
 
     def __init__(self):
         super().__init__()
-        self.name = camel_to_snake(type(self).__name__)
-        self.state = None
-        self.space = None
-        self.groups = None
-        self.goal_vector = None
-        self.initial_speeds = None
+        self.scene = None
+        self.peds = None
         self.factor = 1.0
-        self.time_step = 0.4
-        self.config = {}
+        self.config = Config()
 
-    def load_config(self, config_dict):
-        """Load config file in .toml"""
-        self.config = config_dict.get(self.name)
+    def init(self, scene, config):
+        """Load config and scene"""
+        # load the sub field corresponding to the force name from global confgi file
+        self.config = config.sub_config(camel_to_snake(type(self).__name__))
         if self.config:
-            self.factor = self.config.get("factor")
-            self.time_step = config_dict.get("time_step")
+            self.factor = self.config("factor", 1.0)
 
-    def set_state(self, state, groups=None, space=None, initial_speeds=None):
-        """Update states and groups"""
-        self.state = state
-        self.space = space
-        self.groups = groups
-        self.goal_vector = stateutils.desired_directions(self.state)  # e
-        if initial_speeds is not None:
-            self.initial_speeds = initial_speeds
+        self.scene = scene
+        self.peds = self.scene.peds
 
     @abstractmethod
-    def get_force(self):
+    def _get_force(self) -> np.ndarray:
         """Abstract class to get social forces
             return: an array of force vectors for each pedestrians
         """
         raise NotImplementedError
 
+    def get_force(self, debug=False):
+        force = self._get_force()
+        if debug:
+            logger.debug(f"{camel_to_snake(type(self).__name__)}:\n {repr(force)}")
+        return force
+
 
 class GoalAttractiveForce(Force):
     """accelerate to desired velocity"""
 
-    def get_force(self):
-        vel = self.state[:, 2:4]
-        tau = self.state[:, 6:7]
+    def _get_force(self):
         F0 = (
             1.0
-            / tau
-            * (np.expand_dims(self.initial_speeds, -1) * self.goal_vector - vel)
+            / self.peds.tau()
+            * (
+                np.expand_dims(self.peds.initial_speeds, -1) * self.peds.desired_directions()
+                - self.peds.vel()
+            )
         )
         return F0 * self.factor
 
@@ -71,46 +67,42 @@ class GoalAttractiveForce(Force):
 class PedRepulsiveForce(Force):
     """Ped to ped repulsive force"""
 
-    def get_force(self):
+    def _get_force(self):
         potential_func = PedPedPotential(
-            self.time_step, v0=self.config.get("v0"), sigma=self.config.get("sigma"),
+            self.peds.step_width, v0=self.config("v0"), sigma=self.config("sigma"),
         )
-        f_ab = -1.0 * potential_func.grad_r_ab(self.state)
+        f_ab = -1.0 * potential_func.grad_r_ab(self.peds.state)
 
-        fov = FieldOfView(
-            phi=self.config.get("fov_phi"),
-            out_of_view_factor=self.config.get("fov_factor"),
-        )
-        w = np.expand_dims(fov(self.goal_vector, -f_ab), -1)
+        fov = FieldOfView(phi=self.config("fov_phi"), out_of_view_factor=self.config("fov_factor"),)
+        w = np.expand_dims(fov(self.peds.desired_directions(), -f_ab), -1)
         F_ab = w * f_ab
         return np.sum(F_ab, axis=1) * self.factor
 
 
 class SpaceRepulsiveForce(Force):
-    """Space to ped repulsive force"""
+    """obstacles to ped repulsive force"""
 
-    def get_force(self):
-        if self.space is None:
-            F_aB = np.zeros((self.state.shape[0], 0, 2))
+    def _get_force(self):
+        if self.scene.get_obstacles() is None:
+            F_aB = np.zeros((self.peds.size(), 0, 2))
         else:
             potential_func = PedSpacePotential(
-                self.space, u0=self.config.get("u0"), r=self.config.get("r")
+                self.scene.get_obstacles(), u0=self.config("u0"), r=self.config("r")
             )
-            F_aB = -1.0 * potential_func.grad_r_aB(self.state)
+            F_aB = -1.0 * potential_func.grad_r_aB(self.peds.state)
         return np.sum(F_aB, axis=1) * self.factor
 
 
 class GroupCoherenceForce(Force):
     """Group coherence force, paper version"""
 
-    def get_force(self):
-        forces = np.zeros((self.state.shape[0], 2))
-        if self.groups is not None:
-            for group in self.groups:
+    def _get_force(self):
+        forces = np.zeros((self.peds.size(), 2))
+        if self.peds.has_group():
+            for group in self.peds.groups:
                 threshold = (len(group) - 1) / 2
-                member_states = self.state[group, :]
-                member_pos = member_states[:, 0:2]
-                com = stateutils.group_center(member_states)
+                member_pos = self.peds.pos()[group, :]
+                com = stateutils.center_of_mass(member_pos)
                 force_vec = com - member_pos
                 vectors, norms = stateutils.normalize(force_vec)
                 vectors[norms < threshold] = [0, 0]
@@ -121,14 +113,13 @@ class GroupCoherenceForce(Force):
 class GroupCoherenceForceAlt(Force):
     """ Alternative group coherence force as specified in pedsim_ros"""
 
-    def get_force(self):
-        forces = np.zeros((self.state.shape[0], 2))
-        if self.groups is not None:
-            for group in self.groups:
+    def _get_force(self):
+        forces = np.zeros((self.peds.size(), 2))
+        if self.peds.has_group():
+            for group in self.peds.groups:
                 threshold = (len(group) - 1) / 2
-                member_states = self.state[group, :]
-                member_pos = member_states[:, 0:2]
-                com = stateutils.group_center(member_states)
+                member_pos = self.peds.pos()[group, :]
+                com = stateutils.center_of_mass(member_pos)
                 force_vec = com - member_pos
                 norms = stateutils.speeds(force_vec)
                 softened_factor = (np.tanh(norms - threshold) + 1) / 2
@@ -139,17 +130,18 @@ class GroupCoherenceForceAlt(Force):
 class GroupRepulsiveForce(Force):
     """Group repulsive force"""
 
-    def get_force(self):
-        threshold = self.config.get("threshold") or 0.5
-        forces = np.zeros((self.state.shape[0], 2))
-        if self.groups is not None:
-            for group in self.groups:
-                member_pos = self.state[group][:, 0:2]
-                for m in stateutils.vec_diff(member_pos):
-                    vectors, norms = stateutils.normalize(m)
-                    vectors = np.nan_to_num(vectors)
-                    vectors[norms > threshold] = [0, 0]
-                    forces[group, :] += m
+    def _get_force(self):
+        threshold = self.config("threshold", 0.5)
+        forces = np.zeros((self.peds.size(), 2))
+        if self.peds.has_group():
+            for group in self.peds.groups:
+                size = len(group)
+                member_pos = self.peds.pos()[group, :]
+                diff = stateutils.each_diff(member_pos)  # others - self
+                _, norms = stateutils.normalize(diff)
+                diff[norms > threshold, :] = 0
+                # forces[group, :] += np.sum(diff, axis=0)
+                forces[group, :] += np.sum(diff.reshape((size, -1, 2)), axis=1)
 
         return forces * self.factor
 
@@ -157,40 +149,144 @@ class GroupRepulsiveForce(Force):
 class GroupGazeForce(Force):
     """Group gaze force"""
 
-    def get_force(self):
-        forces = np.zeros((self.state.shape[0], 2))
-        vision_angle = self.config.get("fov_phi") or 100.0
-        if self.groups is not None:
-            for group in self.groups:
+    def _get_force(self):
+        forces = np.zeros((self.peds.size(), 2))
+        vision_angle = self.config("fov_phi", 100.0)
+        directions, dist = stateutils.desired_directions(self.peds.state)
+        if self.peds.has_group():
+            for group in self.peds.groups:
                 group_size = len(group)
                 # 1-agent groups don't need to compute this
                 if group_size <= 1:
                     continue
-                member_states = self.state[group, :]
-                member_pos = member_states[:, 0:2]
-                member_directions = self.goal_vector[group, :]
+                member_pos = self.peds.pos()[group, :]
+                member_directions = directions[group, :]
+                member_dist = dist[group]
                 # use center of mass without the current agent
                 relative_com = np.array(
                     [
-                        stateutils.group_center(
-                            member_pos[np.arange(group_size) != i, :]
-                        )
+                        stateutils.center_of_mass(member_pos[np.arange(group_size) != i, :2])
                         - member_pos[i, :]
                         for i in range(group_size)
                     ]
                 )
 
-                com_directions, _ = stateutils.normalize(relative_com)
+                com_directions, com_dist = stateutils.normalize(relative_com)
                 # angle between walking direction and center of mass
-                com_angles = np.degrees(
-                    [
-                        np.arccos(np.dot(d, c))
-                        for d, c in zip(member_directions, com_directions)
-                    ]
+                element_prod = np.array(
+                    [np.dot(d, c) for d, c in zip(member_directions, com_directions)]
                 )
+                com_angles = np.degrees(np.arccos(element_prod))
                 rotation = np.radians(
                     [a - vision_angle if a > vision_angle else 0.0 for a in com_angles]
                 )
-                force = -np.expand_dims(rotation, -1) * member_directions
+                force = -rotation.reshape(-1, 1) * member_directions
+                # force = (
+                #     com_dist.reshape(-1, 1)
+                #     * element_prod.reshape(-1, 1)
+                #     / member_dist.reshape(-1, 1)
+                #     * member_directions
+                # )
                 forces[group, :] += force
+
         return forces * self.factor
+
+
+class DesiredForce(Force):
+    """Calculates the force between this agent and the next assigned waypoint.
+    If the waypoint has been reached, the next waypoint in the list will be
+    selected.
+    :return: the calculated force
+    """
+
+    def _get_force(self):
+        relexation_time = self.config("relaxation_time", 0.5)
+        goal_threshold = self.config("goal_threshold", 0.1)
+        pos = self.peds.pos()
+        vel = self.peds.vel()
+        goal = self.peds.goal()
+        direction, dist = stateutils.normalize(goal - pos)
+        force = np.zeros((self.peds.size(), 2))
+        force[dist > goal_threshold] = (
+            direction * self.peds.max_speeds.reshape((-1, 1)) - vel.reshape((-1, 2))
+        )[dist > goal_threshold, :]
+        force[dist <= goal_threshold] = -1.0 * vel[dist <= goal_threshold]
+        force /= relexation_time
+        return force * self.factor
+
+
+class SocialForce(Force):
+    """Calculates the social force between this agent and all the other agents
+    belonging to the same scene.
+    It iterates over all agents inside the scene, has therefore the complexity
+    O(N^2). A better
+    agent storing structure in Tscene would fix this. But for small (less than
+    10000 agents) scenarios, this is just
+    fine.
+    :return:  nx2 ndarray the calculated force
+    """
+
+    def _get_force(self):
+        lambda_importance = self.config("lambda_importance", 2.0)
+        gamma = self.config("gamma", 0.35)
+        n = self.config("n", 2)
+        n_prime = self.config("n_prime", 3)
+
+        pos = self.peds.pos()
+        vel = self.peds.vel()
+        size = self.peds.size()
+        pos_diff = stateutils.each_diff(pos)  # n*(n-1)x2 other - self
+        diff_direction, diff_length = stateutils.normalize(pos_diff)
+        vel_diff = -1.0 * stateutils.each_diff(vel)  # n*(n-1)x2 self - other
+
+        # compute interaction direction t_ij
+        interaction_vec = lambda_importance * vel_diff + diff_direction
+        interaction_direction, interaction_length = stateutils.normalize(interaction_vec)
+
+        # compute angle theta (between interaction and position difference vector)
+        theta = stateutils.vector_angles(interaction_direction) - stateutils.vector_angles(
+            diff_direction
+        )
+        # compute model parameter B = gamma * ||D||
+        B = gamma * interaction_length
+
+        force_velocity_amount = np.exp(-1.0 * diff_length / B - np.square(n_prime * B * theta))
+        force_angle_amount = -np.sign(theta) * np.exp(
+            -1.0 * diff_length / B - np.square(n * B * theta)
+        )
+        force_velocity = force_velocity_amount.reshape(-1, 1) * interaction_direction
+        force_angle = force_angle_amount.reshape(-1, 1) * stateutils.left_normal(
+            interaction_direction
+        )
+
+        force = force_velocity + force_angle  # n*(n-1) x 2
+        force = np.sum(force.reshape((size, -1, 2)), axis=1)
+        return force * self.factor
+
+
+class ObstacleForce(Force):
+    """Calculates the force between this agent and the nearest obstacle in this
+    scene.
+    :return:  the calculated force
+    """
+
+    def _get_force(self):
+        sigma = self.config("sigma", 0.2)
+        threshold = self.config("threshold", 0.2) + self.peds.agent_radius
+        force = np.zeros((self.peds.size(), 2))
+        if len(self.scene.get_obstacles()) == 0:
+            return force
+        obstacles = np.vstack(self.scene.get_obstacles())
+        pos = self.peds.pos()
+
+        for i, p in enumerate(pos):
+            diff = p - obstacles
+            directions, dist = stateutils.normalize(diff)
+            dist = dist - self.peds.agent_radius
+            if np.all(dist >= threshold):
+                continue
+            dist_mask = dist < threshold
+            directions[dist_mask] *= np.exp(-dist[dist_mask].reshape(-1, 1) / sigma)
+            force[i] = np.sum(directions[dist_mask], axis=0)
+
+        return force * self.factor

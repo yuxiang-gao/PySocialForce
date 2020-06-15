@@ -1,67 +1,33 @@
 import numpy as np
 import pysocialforce as psf
+from pysocialforce.utils.plot import SceneVisualizer
 
 OUTPUT_DIR = "images/"
 
 
 def test_crossing():
-    initial_state = np.array(
-        [[0.0, 0.0, 0.5, 0.5, 10.0, 10.0], [10.0, 0.3, -0.5, 0.5, 0.0, 10.0],]
-    )
+    initial_state = np.array([[0.0, 0.0, 0.5, 0.5, 10.0, 10.0], [10.0, 0.3, -0.5, 0.5, 0.0, 10.0],])
     s = psf.Simulator(initial_state)
-    states = np.stack([s.step().state.copy() for _ in range(50)])
+    s.step(50)
 
-    # visualize
-    print("")
-    with psf.show.canvas(OUTPUT_DIR + "crossing.png") as ax:
-        ax.set_xlabel("x [m]")
-        ax.set_ylabel("y [m]")
-
-        for ped in range(2):
-            x = states[:, ped, 0]
-            y = states[:, ped, 1]
-            ax.plot(x, y, "-o", label="ped {}".format(ped), markersize=2.5)
-        ax.legend()
+    with SceneVisualizer(s, OUTPUT_DIR + "crossing") as sv:
+        sv.plot()
 
 
 def test_narrow_crossing():
-    initial_state = np.array(
-        [[0.0, 0.0, 0.5, 0.5, 2.0, 10.0], [2.0, 0.3, -0.5, 0.5, 0.0, 10.0],]
-    )
+    initial_state = np.array([[0.0, 0.0, 0.5, 0.5, 2.0, 10.0], [2.0, 0.3, -0.5, 0.5, 0.0, 10.0],])
     s = psf.Simulator(initial_state)
-    states = np.stack([s.step().state.copy() for _ in range(40)])
-
-    # visualize
-    print("")
-    with psf.show.canvas(OUTPUT_DIR + "narrow_crossing.png") as ax:
-        ax.set_xlabel("x [m]")
-        ax.set_ylabel("y [m]")
-
-        for ped in range(2):
-            x = states[:, ped, 0]
-            y = states[:, ped, 1]
-            ax.plot(x, y, "-o", label="ped {}".format(ped), markersize=2.5)
-        ax.legend()
+    s.step(40)
+    with SceneVisualizer(s, OUTPUT_DIR + "narrow_crossing") as sv:
+        sv.plot()
 
 
 def test_opposing():
-    initial_state = np.array(
-        [[0.0, 0.0, 1.0, 0.0, 0.0, 10.0], [-0.3, 10.0, -1.0, 0.0, -0.3, 0.0],]
-    )
+    initial_state = np.array([[0.0, 0.0, 1.0, 0.0, 0.0, 10.0], [-0.3, 10.0, -1.0, 0.0, -0.3, 0.0],])
     s = psf.Simulator(initial_state)
-    states = np.stack([s.step().state.copy() for _ in range(21)])
-
-    # visualize
-    print("")
-    with psf.show.canvas(OUTPUT_DIR + "opposing.png") as ax:
-        ax.set_xlabel("x [m]")
-        ax.set_ylabel("y [m]")
-
-        for ped in range(2):
-            x = states[:, ped, 0]
-            y = states[:, ped, 1]
-            ax.plot(x, y, "-o", label="ped {}".format(ped), markersize=2.5)
-        ax.legend()
+    s.step(21)
+    with SceneVisualizer(s, OUTPUT_DIR + "opposing") as sv:
+        sv.plot()
 
 
 def test_2opposing():
@@ -73,16 +39,6 @@ def test_2opposing():
         ]
     )
     s = psf.Simulator(initial_state)
-    states = np.stack([s.step().state.copy() for _ in range(40)])
-
-    # visualize
-    print("")
-    with psf.show.canvas(OUTPUT_DIR + "2opposing.png") as ax:
-        ax.set_xlabel("x [m]")
-        ax.set_ylabel("y [m]")
-
-        for ped in range(3):
-            x = states[:, ped, 0]
-            y = states[:, ped, 1]
-            ax.plot(x, y, "-o", label="ped {}".format(ped), markersize=2.5)
-        ax.legend()
+    s.step(40)
+    with SceneVisualizer(s, OUTPUT_DIR + "2opposing") as sv:
+        sv.plot()

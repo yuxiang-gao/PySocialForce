@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from . import stateutils
+from pysocialforce.utils import stateutils
 
 
 class PedPedPotential(object):
@@ -24,9 +24,7 @@ class PedPedPotential(object):
         2b=sqrt((r_ab+(r_ab-v*delta_t*e_b))
         """
         speeds_b = np.expand_dims(speeds, axis=0)
-        speeds_b_abc = np.expand_dims(
-            speeds_b, axis=2
-        )  # abc = alpha, beta, coordinates
+        speeds_b_abc = np.expand_dims(speeds_b, axis=2)  # abc = alpha, beta, coordinates
         e_b = np.expand_dims(desired_directions, axis=0)
 
         in_sqrt = (
@@ -46,13 +44,11 @@ class PedPedPotential(object):
         """r_ab
         r_ab := r_a − r_b.
         """
-        return stateutils.vec_diff(state)
+        return stateutils.vec_diff(state[:, :2])
 
     def __call__(self, state):
         speeds = stateutils.speeds(state)
-        return self.value_r_ab(
-            self.r_ab(state), speeds, stateutils.desired_directions(state)
-        )
+        return self.value_r_ab(self.r_ab(state), speeds, stateutils.desired_directions(state))
 
     def grad_r_ab(self, state, delta=1e-3):
         """Compute gradient wrt r_ab using finite difference differentiation."""
@@ -75,16 +71,16 @@ class PedPedPotential(object):
 
 
 class PedSpacePotential(object):
-    """Pedestrian-space interaction potential.
+    """Pedestrian-obstacles interaction potential.
 
-    space is a list of numpy arrays containing points of boundaries.
+    obstacles is a list of numpy arrays containing points of boundaries.
 
     u0 is in m^2 / s^2.
     r is in m
     """
 
-    def __init__(self, space, u0=None, r=None):
-        self.space = space or []
+    def __init__(self, obstacles, u0=None, r=None):
+        self.obstacles = obstacles or []
         self.u0 = u0 or 10
         self.r = r or 0.2
 
@@ -94,16 +90,16 @@ class PedSpacePotential(object):
 
     def r_aB(self, state):
         """r_aB"""
-        if not self.space:
+        if not self.obstacles:
             return np.zeros((state.shape[0], 0, 2))
 
         r_a = np.expand_dims(state[:, 0:2], 1)
         closest_i = [
             np.argmin(np.linalg.norm(r_a - np.expand_dims(B, 0), axis=-1), axis=1)
-            for B in self.space
+            for B in self.obstacles
         ]
         closest_points = np.swapaxes(
-            np.stack([B[i] for B, i in zip(self.space, closest_i)]), 0, 1
+            np.stack([B[i] for B, i in zip(self.obstacles, closest_i)]), 0, 1
         )  # index order: pedestrian, boundary, coordinates
         return r_a - closest_points
 
