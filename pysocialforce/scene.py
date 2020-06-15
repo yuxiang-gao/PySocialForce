@@ -4,16 +4,16 @@ from typing import List
 import numpy as np
 
 from pysocialforce.utils import stateutils
-from pysocialforce.utils import DefaultConfig
 
 
 class PedState:
     """Tracks the state of pedstrains and social groups"""
 
     def __init__(self, state, groups, config):
-        self.default_tau = config("tau")
-        self.step_width = config("step_width")
-        self.max_speed_multiplier = config("max_speed_multiplier")
+        self.default_tau = config("tau", 0.5)
+        self.step_width = config("step_width", 0.4)
+        self.agent_radius = config("agent_radius", 0.35)
+        self.max_speed_multiplier = config("max_speed_multiplier", 1.3)
 
         self.max_speeds = None
         self.initial_speeds = None
@@ -40,20 +40,23 @@ class PedState:
             self._state = state
         if self.initial_speeds is None:
             self.initial_speeds = self.speeds()
-            self.max_speeds = self.max_speed_multiplier * self.initial_speeds
+        self.max_speeds = self.max_speed_multiplier * self.initial_speeds
         self.ped_states.append(self._state.copy())
 
     def get_states(self):
         return np.stack(self.ped_states), self.group_states
 
-    def size(self):
+    def size(self) -> int:
         return self.state.shape[0]
 
-    def pos(self):
+    def pos(self) -> np.ndarray:
         return self.state[:, 0:2]
 
     def vel(self) -> np.ndarray:
         return self.state[:, 2:4]
+
+    def goal(self) -> np.ndarray:
+        return self.state[:, 4:6]
 
     def tau(self):
         return self.state[:, 6:7]
@@ -106,8 +109,8 @@ class PedState:
     def has_group(self):
         return self.groups is not None
 
-    def get_group(self, index: int) -> np.ndarray:
-        return self.state[self.groups[index], :]
+    # def get_group_by_idx(self, index: int) -> np.ndarray:
+    #     return self.state[self.groups[index], :]
 
     def which_group(self, index: int) -> int:
         """find group index from ped index"""
@@ -117,29 +120,10 @@ class PedState:
         return -1
 
 
-class Scene:
-    """Tracks the scene elements"""
-
-    def __init__(self, state, groups=None, obstacles=None, config=DefaultConfig()):
-        # TODO: load obstacles from config
-        self.config = config.sub_config("scene")
-        # initiate obstacles
-        self.resolution = self.config("resolution")
+class EnvState:
+    def __init__(self, obstacles, resolution=10):
+        self.resolution = resolution
         self.obstacles = obstacles
-
-        # initiate agents
-
-        self.peds = PedState(state, groups, self.config)
-        # expose ped state and groups
-        self.state = self.peds.state
-        self.groups = self.peds.groups
-
-    def get_states(self):
-        """Expose whole state"""
-        return self.peds.get_states()
-
-    def get_length(self):
-        return len(self.get_states()[0])
 
     @property
     def obstacles(self) -> List[np.ndarray]:
