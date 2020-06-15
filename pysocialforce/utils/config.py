@@ -38,8 +38,8 @@ class Config:
             return Config(sub_dict)
         return Config()
 
-    def __call__(self, entry: str):
-        return self.config.get(entry)
+    def __call__(self, entry: str, default=None):
+        return self.config.get(entry) or default
 
 
 class DefaultConfig(Config):

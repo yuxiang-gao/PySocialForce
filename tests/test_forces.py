@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from pysocialforce import forces
-from pysocialforce.scene import Scene, PedState
+from pysocialforce import Simulator
 from pysocialforce.utils import DefaultConfig
 
 
@@ -12,9 +12,8 @@ def generate_scene():
     state[:, :4] = np.array(
         [[1, 1, 1, 0], [1, 1.1, 0, 1], [3, 3, 1, 1], [3, 3.01, 1, 2], [3, 4, 3, 1]]
     )
-    config = DefaultConfig()
-    scene = Scene(state, config=config)
-    return scene, config
+    scene = Simulator(state)
+    return scene, scene.config
 
 
 def test_desired_force(generate_scene):
@@ -43,11 +42,11 @@ def test_social_force(generate_scene):
     assert f.get_force(debug=True) == pytest.approx(
         np.array(
             [
-                [1.09406676e-04, 8.11547148e-05],
-                [5.20013105e-05, 9.86718725e-05],
-                [7.66236804e-03, -1.16738960e-04],
-                [7.72339025e-03, 3.03769792e-05],
-                [-9.12767677e-06, -1.23117582e-05],
+                [3.18320152e-12, 1.74095049e-12],
+                [-3.64726290e-05, -6.76204532e-05],
+                [7.86014187e-03, 1.66840389e-04],
+                [7.70524167e-03, -3.03788477e-05],
+                [9.12767677e-06, 1.23117582e-05],
             ]
         )
     )

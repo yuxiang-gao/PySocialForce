@@ -77,7 +77,6 @@ def vec_diff(vecs: np.ndarray):
     return diff
 
 
-@jit
 def each_diff(vecs, keepdims=False):
     """ 
     :param vecs: nx2 array

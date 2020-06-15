@@ -12,7 +12,7 @@ def test_separator():
     s = psf.Simulator(initial_state, obstacles=obstacles)
     s.step(80)
 
-    with SceneVisualizer(s.scene, OUTPUT_DIR + "separator") as sv:
+    with SceneVisualizer(s, OUTPUT_DIR + "separator") as sv:
         sv.animate()
 
 
@@ -31,10 +31,10 @@ def test_gate():
             [10.0, 5.0, -1.0, 0.0, -10.0, 0.0],
         ]
     )
-    obstacles = [(0, 0, -10, -0.7), (0, 0, 0.7, 10)]
+    obstacles = [(0, 0, -10, -1.0), (0, 0, 1.0, 10)]
     s = psf.Simulator(initial_state, obstacles=obstacles)
-    s.step(150)
-    with SceneVisualizer(s.scene, OUTPUT_DIR + "gate") as sv:
+    s.step(100)
+    with SceneVisualizer(s, OUTPUT_DIR + "gate") as sv:
         sv.animate()
 
 
@@ -59,7 +59,7 @@ def test_walkway(n):
     obstacles = [(-25, 25, 5, 5), (-25, 25, -5, -5)]
     s = psf.Simulator(initial_state, obstacles=obstacles)
     s.step(250)
-    with SceneVisualizer(s.scene, OUTPUT_DIR + f"walkway_{n}") as sv:
+    with SceneVisualizer(s, OUTPUT_DIR + f"walkway_{n}") as sv:
         sv.ax.set_xlim(-30, 30)
         sv.ax.set_ylim(-20, 20)
         sv.animate()
