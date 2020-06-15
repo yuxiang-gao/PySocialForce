@@ -152,6 +152,44 @@ class GroupGazeForce(Force):
     def _get_force(self):
         forces = np.zeros((self.peds.size(), 2))
         vision_angle = self.config("fov_phi", 100.0)
+        directions, _ = stateutils.desired_directions(self.peds.state)
+        if self.peds.has_group():
+            for group in self.peds.groups:
+                group_size = len(group)
+                # 1-agent groups don't need to compute this
+                if group_size <= 1:
+                    continue
+                member_pos = self.peds.pos()[group, :]
+                member_directions = directions[group, :]
+                # use center of mass without the current agent
+                relative_com = np.array(
+                    [
+                        stateutils.center_of_mass(member_pos[np.arange(group_size) != i, :2])
+                        - member_pos[i, :]
+                        for i in range(group_size)
+                    ]
+                )
+
+                com_directions, _ = stateutils.normalize(relative_com)
+                # angle between walking direction and center of mass
+                element_prod = np.array(
+                    [np.dot(d, c) for d, c in zip(member_directions, com_directions)]
+                )
+                com_angles = np.degrees(np.arccos(element_prod))
+                rotation = np.radians(
+                    [a - vision_angle if a > vision_angle else 0.0 for a in com_angles]
+                )
+                force = -rotation.reshape(-1, 1) * member_directions
+                forces[group, :] += force
+
+        return forces * self.factor
+
+
+class GroupGazeForceAlt(Force):
+    """Group gaze force"""
+
+    def _get_force(self):
+        forces = np.zeros((self.peds.size(), 2))
         directions, dist = stateutils.desired_directions(self.peds.state)
         if self.peds.has_group():
             for group in self.peds.groups:
@@ -176,17 +214,12 @@ class GroupGazeForce(Force):
                 element_prod = np.array(
                     [np.dot(d, c) for d, c in zip(member_directions, com_directions)]
                 )
-                com_angles = np.degrees(np.arccos(element_prod))
-                rotation = np.radians(
-                    [a - vision_angle if a > vision_angle else 0.0 for a in com_angles]
+                force = (
+                    com_dist.reshape(-1, 1)
+                    * element_prod.reshape(-1, 1)
+                    / member_dist.reshape(-1, 1)
+                    * member_directions
                 )
-                force = -rotation.reshape(-1, 1) * member_directions
-                # force = (
-                #     com_dist.reshape(-1, 1)
-                #     * element_prod.reshape(-1, 1)
-                #     / member_dist.reshape(-1, 1)
-                #     * member_directions
-                # )
                 forces[group, :] += force
 
         return forces * self.factor
@@ -232,12 +265,9 @@ class SocialForce(Force):
         n = self.config("n", 2)
         n_prime = self.config("n_prime", 3)
 
-        pos = self.peds.pos()
-        vel = self.peds.vel()
-        size = self.peds.size()
-        pos_diff = stateutils.each_diff(pos)  # n*(n-1)x2 other - self
+        pos_diff = stateutils.each_diff(self.peds.pos())  # n*(n-1)x2 other - self
         diff_direction, diff_length = stateutils.normalize(pos_diff)
-        vel_diff = -1.0 * stateutils.each_diff(vel)  # n*(n-1)x2 self - other
+        vel_diff = -1.0 * stateutils.each_diff(self.peds.vel())  # n*(n-1)x2 self - other
 
         # compute interaction direction t_ij
         interaction_vec = lambda_importance * vel_diff + diff_direction
@@ -260,7 +290,7 @@ class SocialForce(Force):
         )
 
         force = force_velocity + force_angle  # n*(n-1) x 2
-        force = np.sum(force.reshape((size, -1, 2)), axis=1)
+        force = np.sum(force.reshape((self.peds.size(), -1, 2)), axis=1)
         return force * self.factor
 
 

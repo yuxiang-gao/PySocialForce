@@ -2,7 +2,7 @@
 from typing import Tuple
 
 import numpy as np
-from numba import njit, jit, vectorize
+from numba import njit
 
 
 # @jit
@@ -79,7 +79,7 @@ def vec_diff(vecs: np.ndarray) -> np.ndarray:
 
 
 def each_diff(vecs: np.ndarray, keepdims=False) -> np.ndarray:
-    """ 
+    """
     :param vecs: nx2 array
     :return: diff with diagonal elements removed
     """
@@ -110,9 +110,9 @@ def center_of_mass(vecs: np.ndarray) -> np.ndarray:
 
 
 @njit
-def minmax(m: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    x_min = np.min(m[:, 0])
-    y_min = np.min(m[:, 1])
-    x_max = np.max(m[:, 0])
-    y_max = np.max(m[:, 1])
+def minmax(vecs: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    x_min = np.min(vecs[:, 0])
+    y_min = np.min(vecs[:, 1])
+    x_max = np.max(vecs[:, 0])
+    y_max = np.max(vecs[:, 1])
     return (x_min, y_min, x_max, y_max)
