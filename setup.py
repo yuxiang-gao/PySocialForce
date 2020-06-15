@@ -22,7 +22,7 @@ setup(
     author="Yuxiang Gao",
     author_email="yuxiang.gao@jhu.edu",
     url="https://github.com/yuxiang-gao/PySocialForce",
-    install_requires=["numpy", "toml", "numba"],
+    install_requires=["numpy", "toml", "numba", "scipy"],
     extras_require={
         "dev": ["black", "jupyter"],
         "test": ["pylint", "pytest",],
