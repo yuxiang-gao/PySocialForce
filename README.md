@@ -75,7 +75,7 @@ sim.step(n=50)
 ```
 
 You can configure the parameters by passing in a [toml](https://github.com/toml-lang/toml) file.
-Default configurations are located in the [config.toml](config.toml) file in root directory.
+Default configurations are located in the [default.toml](pysocialforce/utils/default.toml) file in root directory.
 
 For more examples, please refer to the [examples folder](examples).
 
@@ -95,7 +95,7 @@ For more examples, please refer to the [examples folder](examples).
 
 ### Groups
 
-![group crossing](images/group_crossing.png)
+![group crossing](images/group_crossing.gif)
 
 ## License
 
