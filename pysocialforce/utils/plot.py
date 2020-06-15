@@ -206,7 +206,7 @@ class SceneVisualizer:
         self.group_collection.set_paths(self.group_actors)
 
     def plot_obstacles(self):
-        for s in self.scene.obstacles:
+        for s in self.scene.get_obstacles():
             self.ax.plot(s[:, 0], s[:, 1], "-o", color="black", markersize=2.5)
 
     def animation_init(self):

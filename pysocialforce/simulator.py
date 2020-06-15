@@ -4,11 +4,9 @@
 
 See Helbing and Molnár 1998 and Moussaïd et al. 2010
 """
-from pysocialforce import forces
 from pysocialforce.utils import DefaultConfig
-from pysocialforce.scene import Scene
-
-# from pysocialforce.utils import timeit
+from pysocialforce.scene import PedState, EnvState
+from pysocialforce import forces
 
 
 class Simulator:
@@ -26,8 +24,6 @@ class Simulator:
         Group members are denoted by their indices in the state
     config : Dict
         Loaded from a toml config file
-    timestep : Double
-        Simulation time step, Default: 0.4
     max_speeds : np.ndarray
         Maximum speed of pedestrians
     forces : List
@@ -45,41 +41,61 @@ class Simulator:
         self.config = DefaultConfig()
         if config_file:
             self.config.load_config(config_file)
+        # TODO: load obstacles from config
+        self.scene_config = self.config.sub_config("scene")
+        # initiate obstacles
+        self.env = EnvState(obstacles, self.config("resolution", 10.0))
 
-        self.scene = Scene(state, groups, obstacles, self.config)
-        self.peds = self.scene.peds
+        # initiate agents
+        self.peds = PedState(state, groups, self.config)
 
-        self.timestep = self.config("timestep") or 0.4
+        # construct forces
+        self.forces = self.make_forces(self.config)
 
-        self.forces = [
-            forces.GoalAttractiveForce(),
-            forces.PedRepulsiveForce(),
-            forces.SpaceRepulsiveForce(),
+    def make_forces(self, force_configs):
+        """Construct forces"""
+        force_list = [
+            forces.DesiredForce(),
+            forces.SocialForce(),
+            forces.ObstacleForce(),
+            # forces.PedRepulsiveForce(),
+            # forces.SpaceRepulsiveForce(),
         ]
         group_forces = [
             forces.GroupCoherenceForce(),
             forces.GroupRepulsiveForce(),
             forces.GroupGazeForce(),
         ]
-
         if self.config("enable_group"):
-            self.forces += group_forces
+            force_list += group_forces
 
         # initiate forces
-        for force in self.forces:
-            force.init(self.scene, self.config)
+        for force in force_list:
+            force.init(self, force_configs)
+
+        return force_list
+
+    def compute_forces(self):
+        """compute forces"""
+        return sum(map(lambda x: x.get_force(), self.forces))
+
+    def get_states(self):
+        """Expose whole state"""
+        return self.peds.get_states()
+
+    def get_length(self):
+        """Get simulation length"""
+        return len(self.get_states()[0])
+
+    def get_obstacles(self):
+        return self.env.obstacles
 
     def step_once(self):
-        """Step."""
-        # social forces
-        sum_forces = sum(map(lambda x: x.get_force(), self.forces))
-
-        # update state
-        self.peds.step(sum_forces)
-
-        return self
+        """step once"""
+        self.peds.step(self.compute_forces())
 
     def step(self, n=1):
+        """Step n time"""
         for _ in range(n):
             self.step_once()
         return self

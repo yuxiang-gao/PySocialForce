@@ -21,5 +21,5 @@ def test_group_crossing():
     s = psf.Simulator(initial_state, groups=groups, obstacles=obs)
     s.step(80)
 
-    with SceneVisualizer(s.scene, OUTPUT_DIR + "group_crossing") as sv:
+    with SceneVisualizer(s, OUTPUT_DIR + "group_crossing") as sv:
         sv.animate()

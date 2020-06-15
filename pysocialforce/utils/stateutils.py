@@ -1,20 +1,62 @@
 """Utility functions to process state."""
 
 import numpy as np
-from numba import njit
+from numba import njit, jit, vectorize
+
+
+# @jit
+# def normalize(array_in):
+#     """nx2 or mxnx2"""
+#     if len(array_in.shape) == 2:
+#         vec, fac = normalize_array(array_in)
+#         return vec, fac
+#     factors = []
+#     vectors = []
+#     for m in array_in:
+#         vec, fac = normalize_array(m)
+#         vectors.append(vec)
+#         factors.append(fac)
+
+#     return np.array(vectors), np.array(factors)
 
 
 @njit
-def normalize(mat: np.ndarray):
+def vector_angles(vecs):
+    """Calculate angles for an array of vectors
+    :param vecs: nx2 ndarray
+    :return: nx1 ndarray
+    """
+    ang = np.arctan2(vecs[:, 1], vecs[:, 0])  # atan2(y, x)
+    return ang
+
+
+@njit
+def left_normal(vecs):
+    vecs = np.fliplr(vecs) * np.array([-1.0, 1.0])
+    return vecs
+
+
+@njit
+def right_normal(vecs):
+    vecs = np.fliplr(vecs) * np.array([1.0, -1.0])
+    return vecs
+
+
+@njit
+def normalize(vecs: np.ndarray):
     """Normalize nx2 array along the second axis
     input: [n,2] ndarray
     output: (normalized vectors, norm factors)
     """
     norm_factors = []
-    for line in mat:
+    for line in vecs:
         norm_factors.append(np.linalg.norm(line))
     norm_factors = np.array(norm_factors)
-    normalized = mat / np.expand_dims(norm_factors, -1)
+    normalized = vecs / np.expand_dims(norm_factors, -1)
+    # get rid of nans
+    for i in range(norm_factors.shape[0]):
+        if norm_factors[i] == 0:
+            normalized[i] = np.zeros(vecs.shape[1])
     return normalized, norm_factors
 
 
@@ -22,23 +64,33 @@ def normalize(mat: np.ndarray):
 def desired_directions(state: np.ndarray):
     """Given the current state and destination, compute desired direction."""
     destination_vectors = state[:, 4:6] - state[:, 0:2]
-    directions, norm_factors = normalize(destination_vectors)
-    # directions[norm_factors == 0] = [0, 0] not supported
-    for i in range(norm_factors.shape[0]):
-        if norm_factors[i] == 0:
-            directions[i] = [0, 0]
+    directions, _ = normalize(destination_vectors)
     return directions
 
 
 @njit
-def vec_diff(state: np.ndarray):
+def vec_diff(vecs: np.ndarray):
     """r_ab
     r_ab := r_a − r_b.
     """
-    r = state[:, 0:2]
-    r_a = np.expand_dims(r, 1)
-    r_b = np.expand_dims(r, 0)
-    return r_a - r_b
+    diff = np.expand_dims(vecs, 1) - np.expand_dims(vecs, 0)
+    return diff
+
+
+def each_diff(vecs, keepdims=False):
+    """ 
+    :param vecs: nx2 array
+    :return: diff with diagonal elements removed
+    """
+    diff = vec_diff(vecs)
+    # diff = diff[np.any(diff, axis=-1), :]  # get rid of zero vectors
+    diff = diff[
+        ~np.eye(diff.shape[0], dtype=bool), :
+    ]  # get rif of diagonal elements in the diff matrix
+    if keepdims:
+        diff = diff.reshape(vecs.shape[0], -1, vecs.shape[1])
+
+    return diff
 
 
 @njit
@@ -51,15 +103,15 @@ def speeds(state: np.ndarray):
 
 
 @njit
-def center_of_mass(state: np.ndarray):
+def center_of_mass(vecs: np.ndarray):
     """Center-of-mass of a given group"""
-    return np.sum(state, axis=0) / state.shape[0]
+    return np.sum(vecs, axis=0) / vecs.shape[0]
 
 
 @njit
-def minmax(state):
-    x_min = np.min(state[:, 0])
-    y_min = np.min(state[:, 1])
-    x_max = np.max(state[:, 0])
-    y_max = np.max(state[:, 1])
+def minmax(m):
+    x_min = np.min(m[:, 0])
+    y_min = np.min(m[:, 1])
+    x_max = np.max(m[:, 0])
+    y_max = np.max(m[:, 1])
     return (x_min, y_min, x_max, y_max)
