@@ -140,7 +140,6 @@ class GroupRepulsiveForce(Force):
                 diff = stateutils.each_diff(member_pos)  # others - self
                 _, norms = stateutils.normalize(diff)
                 diff[norms > threshold, :] = 0
-                logger.debug(diff)
                 # forces[group, :] += np.sum(diff, axis=0)
                 forces[group, :] += np.sum(diff.reshape((size, -1, 2)), axis=1)
 
@@ -153,6 +152,7 @@ class GroupGazeForce(Force):
     def _get_force(self):
         forces = np.zeros((self.peds.size(), 2))
         vision_angle = self.config("fov_phi", 100.0)
+        directions, dist = stateutils.desired_directions(self.peds.state)
         if self.peds.has_group():
             for group in self.peds.groups:
                 group_size = len(group)
@@ -160,7 +160,8 @@ class GroupGazeForce(Force):
                 if group_size <= 1:
                     continue
                 member_pos = self.peds.pos()[group, :]
-                member_directions = self.peds.desired_directions()[group, :]
+                member_directions = directions[group, :]
+                member_dist = dist[group]
                 # use center of mass without the current agent
                 relative_com = np.array(
                     [
@@ -170,16 +171,24 @@ class GroupGazeForce(Force):
                     ]
                 )
 
-                com_directions, _ = stateutils.normalize(relative_com)
+                com_directions, com_dist = stateutils.normalize(relative_com)
                 # angle between walking direction and center of mass
-                com_angles = np.degrees(
-                    [np.arccos(np.dot(d, c)) for d, c in zip(member_directions, com_directions)]
+                element_prod = np.array(
+                    [np.dot(d, c) for d, c in zip(member_directions, com_directions)]
                 )
+                com_angles = np.degrees(np.arccos(element_prod))
                 rotation = np.radians(
                     [a - vision_angle if a > vision_angle else 0.0 for a in com_angles]
                 )
-                force = -np.expand_dims(rotation, -1) * member_directions
+                force = -rotation.reshape(-1, 1) * member_directions
+                # force = (
+                #     com_dist.reshape(-1, 1)
+                #     * element_prod.reshape(-1, 1)
+                #     / member_dist.reshape(-1, 1)
+                #     * member_directions
+                # )
                 forces[group, :] += force
+
         return forces * self.factor
 
 
@@ -202,7 +211,6 @@ class DesiredForce(Force):
             direction * self.peds.max_speeds.reshape((-1, 1)) - vel.reshape((-1, 2))
         )[dist > goal_threshold, :]
         force[dist <= goal_threshold] = -1.0 * vel[dist <= goal_threshold]
-        print(self.peds.max_speeds)
         force /= relexation_time
         return force * self.factor
 
@@ -264,7 +272,7 @@ class ObstacleForce(Force):
 
     def _get_force(self):
         sigma = self.config("sigma", 0.2)
-        threshold = self.config("threshold")
+        threshold = self.config("threshold", 0.2) + self.peds.agent_radius
         force = np.zeros((self.peds.size(), 2))
         if len(self.scene.get_obstacles()) == 0:
             return force

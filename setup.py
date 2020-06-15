@@ -13,7 +13,7 @@ with open("pysocialforce/__init__.py", "r") as f:
 
 
 setup(
-    name="py-social-force",
+    name="PySocialForce",
     version=VERSION,
     packages=find_packages(),
     license="MIT",

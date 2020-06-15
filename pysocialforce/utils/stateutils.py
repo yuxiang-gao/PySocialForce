@@ -1,4 +1,5 @@
 """Utility functions to process state."""
+from typing import Tuple
 
 import numpy as np
 from numba import njit, jit, vectorize
@@ -21,7 +22,7 @@ from numba import njit, jit, vectorize
 
 
 @njit
-def vector_angles(vecs):
+def vector_angles(vecs: np.ndarray) -> np.ndarray:
     """Calculate angles for an array of vectors
     :param vecs: nx2 ndarray
     :return: nx1 ndarray
@@ -31,19 +32,19 @@ def vector_angles(vecs):
 
 
 @njit
-def left_normal(vecs):
+def left_normal(vecs: np.ndarray) -> np.ndarray:
     vecs = np.fliplr(vecs) * np.array([-1.0, 1.0])
     return vecs
 
 
 @njit
-def right_normal(vecs):
+def right_normal(vecs: np.ndarray) -> np.ndarray:
     vecs = np.fliplr(vecs) * np.array([1.0, -1.0])
     return vecs
 
 
 @njit
-def normalize(vecs: np.ndarray):
+def normalize(vecs: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Normalize nx2 array along the second axis
     input: [n,2] ndarray
     output: (normalized vectors, norm factors)
@@ -61,15 +62,15 @@ def normalize(vecs: np.ndarray):
 
 
 @njit
-def desired_directions(state: np.ndarray):
+def desired_directions(state: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     """Given the current state and destination, compute desired direction."""
     destination_vectors = state[:, 4:6] - state[:, 0:2]
-    directions, _ = normalize(destination_vectors)
-    return directions
+    directions, dist = normalize(destination_vectors)
+    return directions, dist
 
 
 @njit
-def vec_diff(vecs: np.ndarray):
+def vec_diff(vecs: np.ndarray) -> np.ndarray:
     """r_ab
     r_ab := r_a − r_b.
     """
@@ -77,7 +78,7 @@ def vec_diff(vecs: np.ndarray):
     return diff
 
 
-def each_diff(vecs, keepdims=False):
+def each_diff(vecs: np.ndarray, keepdims=False) -> np.ndarray:
     """ 
     :param vecs: nx2 array
     :return: diff with diagonal elements removed
@@ -94,7 +95,7 @@ def each_diff(vecs, keepdims=False):
 
 
 @njit
-def speeds(state: np.ndarray):
+def speeds(state: np.ndarray) -> np.ndarray:
     """Return the speeds corresponding to a given state."""
     #     return np.linalg.norm(state[:, 2:4], axis=-1)
     speed_vecs = state[:, 2:4]
@@ -103,13 +104,13 @@ def speeds(state: np.ndarray):
 
 
 @njit
-def center_of_mass(vecs: np.ndarray):
+def center_of_mass(vecs: np.ndarray) -> np.ndarray:
     """Center-of-mass of a given group"""
     return np.sum(vecs, axis=0) / vecs.shape[0]
 
 
 @njit
-def minmax(m):
+def minmax(m: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     x_min = np.min(m[:, 0])
     y_min = np.min(m[:, 1])
     x_max = np.max(m[:, 0])
