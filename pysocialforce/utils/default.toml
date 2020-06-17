@@ -29,16 +29,16 @@ threshold = 3.0
 
 
 [group_coherence_force]
-factor = 2.0
+factor = 3.0
 
 [group_repulsive_force]
 factor = 1.0
-threshold = 0.5
+threshold = 0.8
 
 [group_gaze_force]
-factor = 5.0
+factor = 4.0
 # fov params
-fov_phi = 100.0
+fov_phi = 180.0
 
 [goal_attractive_force]
 factor = 1
