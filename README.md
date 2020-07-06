@@ -3,7 +3,7 @@
 master: [![Build Status](https://travis-ci.com/yuxiang-gao/PySocialForce.svg?branch=master)](https://travis-ci.com/yuxiang-gao/PySocialForce)
 dev: [![Build Status](https://travis-ci.com/yuxiang-gao/PySocialForce.svg?branch=dev)](https://travis-ci.com/yuxiang-gao/PySocialForce)
 
-Extended Social Force Model implemented in NumPy
+A Python Implementation of the Extended Social Force Model for Pedestrian Dynamics
 
 ## Table of Contents
 
@@ -72,6 +72,13 @@ sim = psf.Simulator(
     )
 # do 50 updates
 sim.step(n=50)
+```
+
+To generate an animation of the simulation, use the `SceneVisualizer` context:
+
+```python
+with psf.plot.SceneVisualizer(simulator, "output_image") as sv:
+    sv.animate()
 ```
 
 You can configure the parameters by passing in a [toml](https://github.com/toml-lang/toml) file.
