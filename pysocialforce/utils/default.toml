@@ -33,12 +33,12 @@ factor = 3.0
 
 [group_repulsive_force]
 factor = 1.0
-threshold = 0.8
+threshold = 0.55
 
 [group_gaze_force]
 factor = 4.0
 # fov params
-fov_phi = 180.0
+fov_phi = 90.0
 
 [goal_attractive_force]
 factor = 1
