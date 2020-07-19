@@ -43,32 +43,14 @@ The other three forces [@Moussaid:2010] are for groups:
 
 Users can easily create their own forces by inheriting the `Force` metaclass.
 
-To use `PySocialForce`, the user passes in the initial states---the positions, velocities, and goals of the pedestrians---and the optional information of social groups and obstacles. Input parameters can be passed in as a `toml` file, as shown in the example below:
+To use `PySocialForce`, the user passes in the initial states---the positions, velocities, and goals of the pedestrians---and the optional information of social groups and obstacles. Input parameters can be passed in as a `toml` file. Given the necessary initial state information, a typical example of running the simulator for 50 timesteps is shown in the example below:
 
 ```python
-import numpy as np
 import pysocialforce as psf
-# initial states; each entry is the position, velocity, and goal
-# of a pedestrian in the form of (px, py, vx, vy, gx, gy)
-initial_state = np.array(
-    [
-        [0.0, 10, -0.5, -0.5, 0.0, 0.0],
-        [0.5, 10, -0.5, -0.5, 0.5, 0.0],
-        [0.0, 0.0, 0.0, 0.5, 1.0, 10.0],
-    ]
-)
-# social group information is represented as lists of indices
-# of the state array
-groups = [[0, 1], [2]]
-# list of linear obstacles given in the form of
-# (x_min, x_max, y_min, y_max)
-obstacles = [[1, 2, 1, 1]]
-# initiate the simulator and pass in the states
 simulator = psf.Simulator(initial_state,
                           groups=groups,
                           obstacles=obstacles,
                           config_file="my_config.toml")
-# run simulator for 50 steps
 simulator.step(50)
 ```
 
