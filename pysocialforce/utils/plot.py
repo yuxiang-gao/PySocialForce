@@ -62,10 +62,13 @@ def animation(length: int, movie_file=None, writer=None, **kwargs):
 class SceneVisualizer:
     """Context for social nav vidualization"""
 
-    def __init__(self, scene, output=None, writer="imagemagick", cmap="viridis", **kwargs):
+    def __init__(
+        self, scene, output=None, writer="imagemagick", cmap="viridis", agent_colors=None, **kwargs
+    ):
         self.scene = scene
         self.states, self.group_states = self.scene.get_states()
         self.cmap = cmap
+        self.agent_colors = agent_colors
         self.frames = self.scene.get_length()
         self.output = output
         self.writer = writer
@@ -187,7 +190,14 @@ class SceneVisualizer:
                 Circle(pos, radius=r) for pos, r in zip(current_state[:, :2], radius)
             ]
         self.human_collection.set_paths(self.human_actors)
-        self.human_collection.set_array(np.arange(current_state.shape[0]))
+        if not self.agent_colors:
+            self.human_collection.set_array(np.arange(current_state.shape[0]))
+        else:
+            # set colors for each agent
+            assert len(self.human_actors) == len(
+                self.agent_colors
+            ), "agent_colors must be the same length as the agents"
+            self.human_collection.set_facecolor(self.agent_colors)
 
     def plot_groups(self, step=-1):
         """Generate patches for groups

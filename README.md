@@ -13,6 +13,7 @@ A Python Implementation of the Extended Social Force Model for Pedestrian Dynami
     - [Roadmap](#roadmap)
   - [Installation](#installation)
   - [Usage](#usage)
+  - [Configuration](#configuration)
   - [Examples](#examples)
     - [Ped-ped Scenarios](#ped-ped-scenarios)
     - [Environmental obstacles](#environmental-obstacles)
@@ -68,7 +69,7 @@ Basic usage:
 import pysocialforce as psf
 # initiate simulator
 sim = psf.Simulator(
-        initial_state, groups=groups, obstacles=obstacles, config_file="config.toml"
+        initial_state, groups=groups, obstacles=obstacles
     )
 # do 50 updates
 sim.step(n=50)
@@ -80,11 +81,58 @@ To generate an animation of the simulation, use the `SceneVisualizer` context:
 with psf.plot.SceneVisualizer(simulator, "output_image") as sv:
     sv.animate()
 ```
-
-You can configure the parameters by passing in a [toml](https://github.com/toml-lang/toml) file.
-Default configurations are located in the [default.toml](pysocialforce/utils/default.toml) file in root directory.
-
 For more examples, please refer to the [examples folder](examples).
+
+## Configuration
+You can configure the parameters by passing in a [toml](https://github.com/toml-lang/toml) file to the simulator:
+```Python
+sim = psf.Simulator(
+        initial_state, groups=groups, obstacles=obstacles, config_file="user_config.toml"
+    )
+```
+
+By default the simulator loads the configurations at [pysocialforce/utils/default.toml](pysocialforce/utils/default.toml).
+An example of the user config and the explanation of the parameters is provided at [examples/example.toml](examples/example.toml).
+Each force has a parameter named `factor`, which is the scale factor for that force. For specific parameters for each force, refer to the comments in the example below:
+```Toml
+...
+[desired_force]
+factor = 1.0
+# The relaxation distance of the goal
+goal_threshold = 0.2
+# How long the relaxation process would take
+relaxation_time = 0.5
+
+[social_force]
+factor = 5.1
+# relative importance of position vs velocity vector
+lambda_importance = 2.0
+# define speed interaction
+gamma = 0.35
+n = 2
+# define angular interaction
+n_prime = 3
+
+[obstacle_force]
+factor = 10.0
+# the standard deviation of obstacle force
+sigma = 0.2
+# threshold to trigger this force
+threshold = 3.0
+
+[group_coherence_force]
+factor = 3.0
+
+[group_repulsive_force]
+factor = 1.0
+# threshold to trigger this force
+threshold = 0.55
+
+[group_gaze_force]
+factor = 4.0
+# fielf of view
+fov_phi = 90.0
+```
 
 ## Examples
 
