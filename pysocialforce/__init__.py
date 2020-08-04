@@ -1,6 +1,6 @@
 """Numpy implementation of the Social Force model."""
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 from .simulator import Simulator
 from .potentials import PedPedPotential, PedSpacePotential
