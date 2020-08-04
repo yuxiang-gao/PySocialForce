@@ -18,6 +18,7 @@ A Python Implementation of the Extended Social Force Model for Pedestrian Dynami
     - [Ped-ped Scenarios](#ped-ped-scenarios)
     - [Environmental obstacles](#environmental-obstacles)
     - [Groups](#groups)
+  - [Contributing to this project](#contributing-to-this-project)
   - [License](#license)
   - [Acknowledgements](#acknowledgements)
   - [References](#references)
@@ -151,6 +152,11 @@ fov_phi = 90.0
 ### Groups
 
 ![group crossing](images/group_crossing.gif)
+
+## Contributing to this project
+Thanks for your interest in contributing! PySocialForce is a open-source project and we welcome contributions of any kind.
+If you find a bug or have a feature request, feel free to contact us using [Github issues](https://github.com/yuxiang-gao/PySocialForce/issues). If you are reporting a bug, please try to include a minimal example to recreate it. If you are requesting a feature, please also give some possible use cases to justify the request.
+If you want to help with development, you can work on a fork of the project and start a pull request. Please document your code and make sure that you have added the necessary tests and examples.
 
 ## License
 
