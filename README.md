@@ -93,6 +93,46 @@ sim = psf.Simulator(
 
 By default the simulator loads the configurations at [pysocialforce/utils/default.toml](pysocialforce/utils/default.toml).
 An example of the user config and the explanation of the parameters is provided at [examples/example.toml](examples/example.toml).
+Each force has a parameter named `factor`, which is the scale factor for that force. For specific parameters for each force, refer to the comments in the example below:
+```Toml
+...
+[desired_force]
+factor = 1.0
+# The relaxation distance of the goal
+goal_threshold = 0.2
+# How long the relaxation process would take
+relaxation_time = 0.5
+
+[social_force]
+factor = 5.1
+# relative importance of position vs velocity vector
+lambda_importance = 2.0
+# define speed interaction
+gamma = 0.35
+n = 2
+# define angular interaction
+n_prime = 3
+
+[obstacle_force]
+factor = 10.0
+# the standard deviation of obstacle force
+sigma = 0.2
+# threshold to trigger this force
+threshold = 3.0
+
+[group_coherence_force]
+factor = 3.0
+
+[group_repulsive_force]
+factor = 1.0
+# threshold to trigger this force
+threshold = 0.55
+
+[group_gaze_force]
+factor = 4.0
+# fielf of view
+fov_phi = 90.0
+```
 
 ## Examples
 
