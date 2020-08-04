@@ -7,5 +7,4 @@ install:
   - pip install -e .
   - pip install --upgrade codecov pylint astroid pytest pytest-cov matplotlib
 script:
-  - pylint pysocialforce
   - pytest --cov=pysocialforce tests/
