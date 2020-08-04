@@ -57,9 +57,10 @@ def test_walkway(n):
     initial_state = np.concatenate((state_left, state_right))
 
     obstacles = [(-25, 25, 5, 5), (-25, 25, -5, -5)]
+    agent_colors = [(1, 0, 0)] * n + [(0, 0, 1)] * n
     s = psf.Simulator(initial_state, obstacles=obstacles)
-    s.step(250)
-    with SceneVisualizer(s, OUTPUT_DIR + f"walkway_{n}") as sv:
+    s.step(150)
+    with SceneVisualizer(s, OUTPUT_DIR + f"walkway_{n}", agent_colors=agent_colors) as sv:
         sv.ax.set_xlim(-30, 30)
         sv.ax.set_ylim(-20, 20)
         sv.animate()
