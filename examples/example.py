@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 import pysocialforce as psf
 
@@ -21,7 +22,12 @@ if __name__ == "__main__":
     obs = [[1, 2, 7, 8]]
     # obs = None
     # initiate the simulator,
-    s = psf.Simulator(initial_state, groups=groups, obstacles=obs)
+    s = psf.Simulator(
+        initial_state,
+        groups=groups,
+        obstacles=obs,
+        config_file=Path(__file__).resolve().parent.joinpath("example.toml"),
+    )
     # update 80 steps
     s.step(50)
 

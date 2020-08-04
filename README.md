@@ -13,6 +13,7 @@ A Python Implementation of the Extended Social Force Model for Pedestrian Dynami
     - [Roadmap](#roadmap)
   - [Installation](#installation)
   - [Usage](#usage)
+  - [Configuration](#configuration)
   - [Examples](#examples)
     - [Ped-ped Scenarios](#ped-ped-scenarios)
     - [Environmental obstacles](#environmental-obstacles)
@@ -68,7 +69,7 @@ Basic usage:
 import pysocialforce as psf
 # initiate simulator
 sim = psf.Simulator(
-        initial_state, groups=groups, obstacles=obstacles, config_file="config.toml"
+        initial_state, groups=groups, obstacles=obstacles
     )
 # do 50 updates
 sim.step(n=50)
@@ -80,11 +81,18 @@ To generate an animation of the simulation, use the `SceneVisualizer` context:
 with psf.plot.SceneVisualizer(simulator, "output_image") as sv:
     sv.animate()
 ```
-
-You can configure the parameters by passing in a [toml](https://github.com/toml-lang/toml) file.
-Default configurations are located in the [default.toml](pysocialforce/utils/default.toml) file in root directory.
-
 For more examples, please refer to the [examples folder](examples).
+
+## Configuration
+You can configure the parameters by passing in a [toml](https://github.com/toml-lang/toml) file to the simulator:
+```Python
+sim = psf.Simulator(
+        initial_state, groups=groups, obstacles=obstacles, config_file="user_config.toml"
+    )
+```
+
+By default the simulator loads the configurations at [pysocialforce/utils/default.toml](pysocialforce/utils/default.toml).
+An example of the user config and the explanation of the parameters is provided at [examples/example.toml](examples/example.toml).
 
 ## Examples
 
