@@ -26,7 +26,6 @@ setup(
     version=VERSION,
     packages=find_packages(exclude=("tests",)),
     include_package_data=True,
-    package_data={"pysocialforce": ["config/*.toml"],},
     license="MIT",
     description="Numpy implementation of the Extended Social Force model.",
     long_description=README,
