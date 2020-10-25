@@ -4,7 +4,9 @@
 
 See Helbing and Molnár 1998 and Moussaïd et al. 2010
 """
-from pysocialforce.utils import DefaultConfig
+import numpy as np
+
+from pysocialforce.utils import DefaultConfig, logger
 from pysocialforce.scene import PedState, EnvState
 from pysocialforce import forces
 
@@ -51,6 +53,7 @@ class Simulator:
 
         # construct forces
         self.forces = self.make_forces(self.config)
+        self.force_vectors = self.compute_forces()  # (num_forces, num_ped, 2)
 
     def make_forces(self, force_configs):
         """Construct forces"""
@@ -77,7 +80,8 @@ class Simulator:
 
     def compute_forces(self):
         """compute forces"""
-        return sum(map(lambda x: x.get_force(), self.forces))
+        force_vectors = np.asarray([x.get_force() for x in self.forces])
+        return force_vectors
 
     def get_states(self):
         """Expose whole state"""
@@ -92,7 +96,8 @@ class Simulator:
 
     def step_once(self):
         """step once"""
-        self.peds.step(self.compute_forces())
+        self.force_vectors = self.compute_forces()
+        self.peds.step(self.force_vectors.sum(axis=0))
 
     def step(self, n=1):
         """Step n time"""
