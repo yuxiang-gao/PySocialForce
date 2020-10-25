@@ -3,10 +3,10 @@ from setuptools import setup, find_packages
 
 # read the contents of your README file
 ROOT = pathlib.Path(__file__).parent
-README = (ROOT / "README.md").read_text()
+README = (ROOT / "README.md").read_text(encoding = 'utf-8')
 
 # extract version from __init__.py
-with open(ROOT / "pysocialforce/__init__.py", "r") as f:
+with open(ROOT / "pysocialforce/__init__.py", "r", encoding = 'utf-8') as f:
     VERSION_LINE = [l for l in f if l.startswith("__version__")][0]
     VERSION = VERSION_LINE.split("=")[1].strip()[1:-1]
 
