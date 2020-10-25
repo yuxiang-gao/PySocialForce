@@ -11,10 +11,22 @@ with open(ROOT / "pysocialforce/__init__.py", "r") as f:
     VERSION = VERSION_LINE.split("=")[1].strip()[1:-1]
 
 
+def parse_requirements(filename):
+    """Load requirements from a pip requirements file."""
+    requirements = []
+    with open(filename) as f:
+        for line in f:
+            if line and not line.startswith("#"):
+                requirements.append(line.strip())
+    return requirements
+
+
 setup(
     name="PySocialForce",
     version=VERSION,
     packages=find_packages(exclude=("tests",)),
+    include_package_data=True,
+    package_data={"pysocialforce": ["config/*.toml"],},
     license="MIT",
     description="Numpy implementation of the Extended Social Force model.",
     long_description=README,
@@ -22,7 +34,7 @@ setup(
     author="Yuxiang Gao",
     author_email="yuxiang.gao@jhu.edu",
     url="https://github.com/yuxiang-gao/PySocialForce",
-    install_requires=["numpy", "toml", "numba", "scipy"],
+    install_requires=parse_requirements("requirements.txt"),
     extras_require={
         "dev": ["black", "jupyter"],
         "test": ["pylint", "pytest",],
