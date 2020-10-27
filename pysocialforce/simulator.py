@@ -80,8 +80,8 @@ class Simulator:
 
     def compute_forces(self):
         """compute forces"""
-        force_vectors = np.asarray([x.get_force() for x in self.forces])
-        return force_vectors
+        self.force_vectors = np.asarray([x.get_force() for x in self.forces])
+        return
 
     def get_states(self):
         """Expose whole state"""
@@ -96,7 +96,7 @@ class Simulator:
 
     def step_once(self):
         """step once"""
-        self.force_vectors = self.compute_forces()
+        self.compute_forces()
         self.peds.step(self.force_vectors.sum(axis=0))
 
     def step(self, n=1):
