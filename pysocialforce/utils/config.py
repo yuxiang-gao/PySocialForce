@@ -1,5 +1,4 @@
 """Config"""
-from pathlib import Path
 from typing import Dict
 import toml
 
