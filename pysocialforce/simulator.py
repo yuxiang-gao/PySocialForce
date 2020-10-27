@@ -54,7 +54,7 @@ class Simulator:
         # construct forces
         self.forces = self.make_forces(self.config)
         self.force_vectors = np.zeros(
-            (len(self.forces, self.peds.size, 2))
+            (len(self.forces), self.peds.size(), 2)
         )  # (num_forces, num_ped, 2)
 
     def make_forces(self, force_configs):
