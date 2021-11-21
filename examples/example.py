@@ -31,6 +31,6 @@ if __name__ == "__main__":
     # update 80 steps
     s.step(50)
 
-    with psf.plot.SceneVisualizer(s, "images/exmaple") as sv:
+    with psf.plot.SceneVisualizer(s, "images/example") as sv:
         sv.animate()
         # sv.plot()
