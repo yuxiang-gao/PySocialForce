@@ -146,7 +146,7 @@ class SceneVisualizer:
             [minmax(state) for state in self.states]
         )  # (x_min, y_min, x_max, y_max)
         obs_lims = np.concatenate((np.min(bounds, axis=0), np.max(bounds, axis=0)), axis=None)
-        xy_limits = np.concatenate((np.array([[1,2,3,4], [5,6,7,8]]), np.expand_dims(obs_lims,0)))
+        xy_limits = np.concatenate((xy_limits, np.expand_dims(obs_lims,0)))
         xy_min = np.min(xy_limits[:, :2], axis=0) - margin
         xy_max = np.max(xy_limits[:, 2:4], axis=0) + margin
         self.ax.set(xlim=(xy_min[0], xy_max[0]), ylim=(xy_min[1], xy_max[1]))
