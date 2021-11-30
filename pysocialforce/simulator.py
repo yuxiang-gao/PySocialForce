@@ -17,7 +17,9 @@ class Simulator:
     Attributes
     ----------
     state : np.ndarray [n, 6] or [n, 7]
-       Each entry represents a pedestrian state, (x, y, v_x, v_y, d_x, d_y, [tau])
+        Each entry represents a pedestrian state, (x, y, v_x, v_y, d_x, d_y, [tau])
+    goals : np.ndarray [n, 2]
+        Each pair of entries represents a waypoint after the first, given in state
     obstacles : np.ndarray
         Environmental obstacles
     groups : List of Lists
@@ -37,7 +39,7 @@ class Simulator:
         Make one step
     """
 
-    def __init__(self, state, groups=None, obstacles=None, config_file=None):
+    def __init__(self, state, goals=None, groups=None, obstacles=None, config_file=None):
         self.config = DefaultConfig()
         if config_file:
             self.config.load_config(config_file)
@@ -46,8 +48,9 @@ class Simulator:
         # initiate obstacles
         self.env = EnvState(obstacles, self.config("resolution", 10.0))
 
+        # TODO: support more than one waypoint
         # initiate agents
-        self.peds = PedState(state, groups, self.config)
+        self.peds = PedState(state, goals, groups, self.config)
 
         # construct forces
         self.forces = self.make_forces(self.config)
