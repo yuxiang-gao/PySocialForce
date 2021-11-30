@@ -238,12 +238,17 @@ class DesiredForce(Force):
         pos = self.peds.pos()
         vel = self.peds.vel()
         goal = self.peds.goal()
+        next_goal = self.peds.next_goal()
         direction, dist = stateutils.normalize(goal - pos)
+        flag_vec = dist > goal_threshold
+        if next_goal is not None:
+            new_goal = goal * (~flag_vec) + next_goal * flag_vec
+            goal = new_goal
         force = np.zeros((self.peds.size(), 2))
-        force[dist > goal_threshold] = (
+        force[flag_vec] = (
             direction * self.peds.max_speeds.reshape((-1, 1)) - vel.reshape((-1, 2))
-        )[dist > goal_threshold, :]
-        force[dist <= goal_threshold] = -1.0 * vel[dist <= goal_threshold]
+        )[flag_vec, :]
+        force[~flag_vec] = -1.0 * vel[~flag_vec]
         force /= relexation_time
         return force * self.factor
 
