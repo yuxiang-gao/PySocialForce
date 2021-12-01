@@ -59,9 +59,11 @@ class PedState:
     def goal(self) -> np.ndarray:
         return self.state[:, 4:6]
     
+    def set_goal(self, goal: np.ndarray):
+        self.state[:,4:6] = goal
+
     def next_goal(self) -> np.ndarray:
         return self.goals[:, :2]
-
 
     def tau(self):
         return self.state[:, 6:7]
