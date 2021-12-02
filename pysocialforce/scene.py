@@ -78,7 +78,7 @@ class PedState:
         desired_velocity = self.vel() + self.step_width * force
         desired_velocity = self.capped_velocity(desired_velocity, self.max_speeds)
         # stop when arrived
-        desired_velocity[stateutils.desired_directions(self.state)[1] < 0.5] = [0, 0]
+        # desired_velocity[stateutils.desired_directions(self.state)[1] < 0.5] = [0, 0]
 
         # update state
         next_state = self.state
