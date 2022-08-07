@@ -243,7 +243,7 @@ class DesiredForce(Force):
         force[dist > goal_threshold] = (
             direction * self.peds.max_speeds.reshape((-1, 1)) - vel.reshape((-1, 2))
         )[dist > goal_threshold, :]
-        force[dist <= goal_threshold] = -1.0 * vel[dist <= goal_threshold]
+        # force[dist <= goal_threshold] = -1.0 * vel[dist <= goal_threshold]  # Why do we need this line? Just some hacky fix for an issue?
         force /= relexation_time
         return force * self.factor
 
