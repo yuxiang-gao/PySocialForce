@@ -14,6 +14,7 @@ class PedState:
         self.step_width = config("step_width", 0.4)
         self.agent_radius = config("agent_radius", 0.35)
         self.max_speed_multiplier = config("max_speed_multiplier", 1.3)
+        self.goal_threshold = config("goal_threshold", 0.1)
 
         self.max_speeds = None
         self.initial_speeds = None
@@ -71,7 +72,7 @@ class PedState:
         desired_velocity = self.vel() + self.step_width * force
         desired_velocity = self.capped_velocity(desired_velocity, self.max_speeds)
         # stop when arrived
-        desired_velocity[stateutils.desired_directions(self.state)[1] < 0.5] = [0, 0]
+        desired_velocity[stateutils.desired_directions(self.state)[1] < self.goal_threshold] = [0, 0]
 
         # update state
         next_state = self.state
