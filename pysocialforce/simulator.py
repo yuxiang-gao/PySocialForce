@@ -47,7 +47,7 @@ class Simulator:
         self.env = EnvState(obstacles, self.config("resolution", 10.0))
 
         # initiate agents
-        self.peds = PedState(state, groups, self.config)
+        self.peds = PedState(state, groups, self.scene_config)
 
         # construct forces
         self.forces = self.make_forces(self.config)
