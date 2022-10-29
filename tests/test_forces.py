@@ -79,6 +79,7 @@ def test_group_gaze_force(generate_scene):
     scene.peds.groups = [[0, 1, 3], [2, 4]]
     f = forces.GroupGazeForce()
     f.init(scene, config)
+    f.config.config["fov_phi"] = 100
     f.factor = 1.0
     assert f.get_force(debug=True) == pytest.approx(
         np.array(

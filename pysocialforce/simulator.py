@@ -64,7 +64,7 @@ class Simulator:
         group_forces = [
             forces.GroupCoherenceForceAlt(),
             forces.GroupRepulsiveForce(),
-            forces.GroupGazeForce(),
+            forces.GroupGazeForceAlt(),
         ]
         if self.scene_config("enable_group"):
             force_list += group_forces
