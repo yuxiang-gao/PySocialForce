@@ -1,9 +1,12 @@
 """Calculate forces for individuals and groups"""
 import re
 from abc import ABC, abstractmethod
+from typing import Tuple
 
 import numpy as np
+from numba import njit
 
+from pysocialforce.scene import Line2D, Point2D
 from pysocialforce.potentials import PedPedPotential, PedSpacePotential
 from pysocialforce.fieldofview import FieldOfView
 from pysocialforce.utils import Config, stateutils, logger
@@ -294,29 +297,142 @@ class SocialForce(Force):
         return force * self.factor
 
 
+# class ObstacleForce(Force):
+#     """Calculates the force between this agent and the nearest obstacle in this
+#     scene.
+#     :return:  the calculated force
+#     """
+
+#     def _get_force(self):
+#         sigma = self.config("sigma", 0.2)
+#         threshold = self.config("threshold", 0.2) + self.peds.agent_radius
+#         force = np.zeros((self.peds.size(), 2))
+#         if len(self.scene.get_obstacles()) == 0:
+#             return force
+#         obstacles = np.vstack(self.scene.get_obstacles())
+#         pos = self.peds.pos()
+
+#         for i, p in enumerate(pos):
+#             diff = p - obstacles
+#             directions, dist = stateutils.normalize(diff)
+#             dist = dist - self.peds.agent_radius
+#             if np.all(dist >= threshold):
+#                 continue
+#             dist_mask = dist < threshold
+#             directions[dist_mask] *= np.exp(-dist[dist_mask].reshape(-1, 1) / sigma)
+#             force[i] = np.sum(directions[dist_mask], axis=0)
+
+#         return force * self.factor
+
+
 class ObstacleForce(Force):
     """Calculates the force between this agent and the nearest obstacle in this
     scene.
     :return:  the calculated force
     """
 
-    def _get_force(self):
-        sigma = self.config("sigma", 0.2)
-        threshold = self.config("threshold", 0.2) + self.peds.agent_radius
-        force = np.zeros((self.peds.size(), 2))
-        if len(self.scene.get_obstacles()) == 0:
-            return force
-        obstacles = np.vstack(self.scene.get_obstacles())
-        pos = self.peds.pos()
+    def _get_force(self) -> np.ndarray:
+        """Computes the obstacle forces per pedestrian,
+        output shape (num_peds, 2), forces in x/y direction"""
 
-        for i, p in enumerate(pos):
-            diff = p - obstacles
-            directions, dist = stateutils.normalize(diff)
-            dist = dist - self.peds.agent_radius
-            if np.all(dist >= threshold):
-                continue
-            dist_mask = dist < threshold
-            directions[dist_mask] *= np.exp(-dist[dist_mask].reshape(-1, 1) / sigma)
-            force[i] = np.sum(directions[dist_mask], axis=0)
+        ped_positions = self.peds.pos()
+        forces = np.zeros((ped_positions.shape[0], 2))
+        obstacles = self.scene.get_raw_obstacles()
+        if len(obstacles) == 0:
+            return forces
 
-        return force * self.factor
+        # TODO: figure out how to add those variables into the mix
+        # sigma = self.config.sigma
+        # threshold = self.config.threshold + self.peds.agent_radius
+
+        radius = self.peds.agent_radius
+        all_obstacle_forces(forces, ped_positions, obstacles, radius)
+        return forces * self.factor
+
+
+@njit(fastmath=True)
+def all_obstacle_forces(out_forces: np.ndarray, ped_positions: np.ndarray,
+                        obstacles: np.ndarray, ped_radius: float):
+    obstacle_segments = obstacles[:, :4]
+    ortho_vecs = obstacles[:, 4:]
+    num_peds = ped_positions.shape[0]
+    num_obstacles = obstacles.shape[0]
+    for i in range(num_peds):
+        ped_pos = ped_positions[i]
+        for j in range(num_obstacles):
+            force_x, force_y = obstacle_force(
+                obstacle_segments[j], ortho_vecs[j], ped_pos, ped_radius)
+            out_forces[i, 0] += force_x
+            out_forces[i, 1] += force_y
+
+
+@njit(fastmath=True)
+def obstacle_force(obstacle: Line2D, ortho_vec: Point2D,
+                   ped_pos: Point2D, ped_radius: float) -> Tuple[float, float]:
+    """The obstacle force between a line segment (= obstacle) and
+    a point (= pedestrian's position) is computed as follows:
+    1) compute the distance between the line segment and the point
+    2) compute the repulsive force, i.e. the partial derivative by x/y of the point
+    regarding the virtual potential field denoted as 1 / (2 * dist(line_seg, point)^2)
+    3) return the force as separate x/y components
+    There are 3 cases to be considered for computing the distance:
+    1) obstacle is just a point instead of a line segment
+    2) orthogonal projection hits within the obstacle's line segment
+    3) orthogonal projection doesn't hit within the obstacle's line segment"""
+
+    x1, y1, x2, y2 = obstacle
+    (x3, y3), (x4, y4) = ped_pos, (ped_pos[0] + ortho_vec[0], ped_pos[1] + ortho_vec[1])
+
+    # handle edge case where the obstacle is just a point
+    if (x1, y1) == (x2, y2):
+        obst_dist = euclid_dist(ped_pos[0], ped_pos[1], x1, y1) - ped_radius
+        dx_obst_dist, dy_obst_dist = der_euclid_dist(ped_pos, (x1, y1), obst_dist)
+        return potential_field_force(obst_dist, dx_obst_dist, dy_obst_dist)
+
+    # info: there's always an intersection with the orthogonal vector
+    num = (x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)
+    den = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+    t = num / den
+    ortho_hit = 0 <= t <= 1
+
+    # orthogonal vector doesn't hit within segment bounds
+    if not ortho_hit:
+        d1 = euclid_dist(ped_pos[0], ped_pos[1], x1, y1)
+        d2 = euclid_dist(ped_pos[0], ped_pos[1], x2, y2)
+        obst_dist = min(d1, d2) - ped_radius
+        closer_obst_bound = (x1, y1) if d1 < d2 else (x2, y2)
+        dx_obst_dist, dy_obst_dist = der_euclid_dist(ped_pos, closer_obst_bound, obst_dist)
+        return potential_field_force(obst_dist, dx_obst_dist, dy_obst_dist)
+
+    # orthogonal vector hits within segment bounds
+    cross_x, cross_y = x1 + t * (x2 - x1), y1 + t * (y2 - y1)
+    obst_dist = euclid_dist(ped_pos[0], ped_pos[1], cross_x, cross_y) - ped_radius
+    dx3_cross_x = (y4 - y3) / den * (x2 - x1)
+    dx3_cross_y = (y4 - y3) / den * (y2 - y1)
+    dy3_cross_x = (x3 - x4) / den * (x2 - x1)
+    dy3_cross_y = (x3 - x4) / den * (y2 - y1)
+    dx_obst_dist = ((cross_x - ped_pos[0]) * (dx3_cross_x - 1) \
+        + (cross_y - ped_pos[1]) * dx3_cross_y) / obst_dist
+    dy_obst_dist = ((cross_x - ped_pos[0]) * dy3_cross_x \
+        + (cross_y - ped_pos[1]) * (dy3_cross_y - 1)) / obst_dist
+    return potential_field_force(obst_dist, dx_obst_dist, dy_obst_dist)
+
+
+@njit(fastmath=True)
+def potential_field_force(obst_dist: float, dx_obst_dist: float,
+                          dy_obst_dist: float) -> Tuple[float, float]:
+    der_potential = 1 / pow(obst_dist, 3)
+    return der_potential * dx_obst_dist, der_potential * dy_obst_dist
+
+
+@njit(fastmath=True)
+def euclid_dist(x1: float, y1: float, x2: float, y2: float) -> float:
+    return pow(pow(x2 - x1, 2) + pow(y2 - y1, 2), 0.5)
+
+
+@njit(fastmath=True)
+def der_euclid_dist(p1: Point2D, p2: Point2D, distance: float) -> Tuple[float, float]:
+    # info: distance is an expensive operation and therefore pre-computed
+    dx1_dist = (p1[0] - p2[0]) / distance
+    dy1_dist = (p1[1] - p2[1]) / distance
+    return dx1_dist, dy1_dist

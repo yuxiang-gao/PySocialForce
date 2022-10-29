@@ -1,9 +1,14 @@
 """This module tracks the state odf scene and scen elements like pedestrians, groups and obstacles"""
-from typing import List
+from math import cos, sin, atan2, pi
+from typing import List, Tuple
 
 import numpy as np
 
 from pysocialforce.utils import stateutils
+
+
+Line2D = Tuple[float, float, float, float]
+Point2D = Tuple[float, float]
 
 
 class PedState:
@@ -128,6 +133,29 @@ class EnvState:
     def __init__(self, obstacles, resolution=10):
         self.resolution = resolution
         self.obstacles = obstacles
+        self.obstacles_raw = obstacles
+
+    @property
+    def obstacles_raw(self) -> np.ndarray:
+        return self._obstacles_raw
+
+    @obstacles_raw.setter
+    def obstacles_raw(self, obs_lines: List[Line2D]):
+        def vec_dir_rad(vec: Point2D) -> float:
+            return atan2(vec[1], vec[0])
+
+        def unit_vec(orient: float) -> Point2D:
+            return cos(orient), sin(orient)
+
+        if obs_lines is None:
+            return np.array([])
+
+        ortho_left = [unit_vec(vec_dir_rad((e_x - s_x, e_y - s_y)) + pi/2)
+                      for s_x, s_y, e_x, e_y in obs_lines]
+        obstacles = np.zeros((len(obs_lines), 6))
+        obstacles[:, :4] = [[s_x, s_y, e_x, e_y] for s_x, s_y, e_x, e_y in obs_lines]
+        obstacles[:, 4:] = ortho_left
+        self._obstacles_raw = obstacles
 
     @property
     def obstacles(self) -> List[np.ndarray]:

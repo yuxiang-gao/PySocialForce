@@ -90,6 +90,9 @@ class Simulator:
     def get_obstacles(self):
         return self.env.obstacles
 
+    def get_raw_obstacles(self):
+        return self.env.obstacles_raw
+
     def step_once(self):
         """step once"""
         self.peds.step(self.compute_forces())
