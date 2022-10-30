@@ -6,6 +6,9 @@ from typing import Tuple
 import numpy as np
 from numba import njit
 
+import logging
+logging.getLogger('numba').setLevel(logging.WARNING)
+
 from pysocialforce.scene import Line2D, Point2D
 from pysocialforce.potentials import PedPedPotential, PedSpacePotential
 from pysocialforce.fieldofview import FieldOfView

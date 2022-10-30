@@ -4,6 +4,9 @@ from typing import Tuple
 import numpy as np
 from numba import njit
 
+import logging
+logging.getLogger('numba').setLevel(logging.WARNING)
+
 
 # @jit
 # def normalize(array_in):
