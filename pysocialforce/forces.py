@@ -383,12 +383,13 @@ def obstacle_force(obstacle: Line2D, ortho_vec: Point2D,
     2) orthogonal projection hits within the obstacle's line segment
     3) orthogonal projection doesn't hit within the obstacle's line segment"""
 
+    coll_dist = 1e-5
     x1, y1, x2, y2 = obstacle
     (x3, y3), (x4, y4) = ped_pos, (ped_pos[0] + ortho_vec[0], ped_pos[1] + ortho_vec[1])
 
     # handle edge case where the obstacle is just a point
     if (x1, y1) == (x2, y2):
-        obst_dist = euclid_dist(ped_pos[0], ped_pos[1], x1, y1) - ped_radius
+        obst_dist = max(euclid_dist(ped_pos[0], ped_pos[1], x1, y1) - ped_radius, coll_dist)
         dx_obst_dist, dy_obst_dist = der_euclid_dist(ped_pos, (x1, y1), obst_dist)
         return potential_field_force(obst_dist, dx_obst_dist, dy_obst_dist)
 
@@ -402,14 +403,14 @@ def obstacle_force(obstacle: Line2D, ortho_vec: Point2D,
     if not ortho_hit:
         d1 = euclid_dist(ped_pos[0], ped_pos[1], x1, y1)
         d2 = euclid_dist(ped_pos[0], ped_pos[1], x2, y2)
-        obst_dist = min(d1, d2) - ped_radius
+        obst_dist = max(min(d1, d2) - ped_radius, coll_dist)
         closer_obst_bound = (x1, y1) if d1 < d2 else (x2, y2)
         dx_obst_dist, dy_obst_dist = der_euclid_dist(ped_pos, closer_obst_bound, obst_dist)
         return potential_field_force(obst_dist, dx_obst_dist, dy_obst_dist)
 
     # orthogonal vector hits within segment bounds
     cross_x, cross_y = x1 + t * (x2 - x1), y1 + t * (y2 - y1)
-    obst_dist = euclid_dist(ped_pos[0], ped_pos[1], cross_x, cross_y) - ped_radius
+    obst_dist = max(euclid_dist(ped_pos[0], ped_pos[1], cross_x, cross_y) - ped_radius, coll_dist)
     dx3_cross_x = (y4 - y3) / den * (x2 - x1)
     dx3_cross_y = (y4 - y3) / den * (y2 - y1)
     dy3_cross_x = (x3 - x4) / den * (x2 - x1)
