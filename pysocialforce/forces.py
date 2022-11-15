@@ -344,12 +344,9 @@ class ObstacleForce(Force):
         if len(obstacles) == 0:
             return forces
 
-        # TODO: figure out how to add those variables into the mix
-        # sigma = self.config.sigma
-        # threshold = self.config.threshold + self.peds.agent_radius
-
-        radius = self.peds.agent_radius
-        all_obstacle_forces(forces, ped_positions, obstacles, radius)
+        sigma = self.config("sigma", 0.2)
+        threshold = self.config("threshold", 0.2) + self.peds.agent_radius * sigma
+        all_obstacle_forces(forces, ped_positions, obstacles, threshold)
         return forces * self.factor
 
 

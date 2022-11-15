@@ -97,9 +97,9 @@ class DefaultConfig(Config):
     n_prime = 3
 
     [obstacle_force]
-    factor = 10.0
-    sigma = 0.2
-    threshold = 3.0
+    factor = 10
+    sigma = 0
+    threshold = -0.57
 
     [along_wall_force]
     """
