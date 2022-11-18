@@ -108,7 +108,7 @@ class GroupCoherenceForce(Force):
             for group in self.peds.groups:
                 threshold = (len(group) - 1) / 2
                 member_pos = self.peds.pos()[group, :]
-                com = stateutils.center_of_mass(member_pos)
+                com = stateutils.centroid(member_pos)
                 force_vec = com - member_pos
                 vectors, norms = stateutils.normalize(force_vec)
                 vectors[norms < threshold] = [0, 0]
@@ -121,15 +121,17 @@ class GroupCoherenceForceAlt(Force):
 
     def _get_force(self):
         forces = np.zeros((self.peds.size(), 2))
-        if self.peds.has_group():
-            for group in self.peds.groups:
-                threshold = (len(group) - 1) / 2
-                member_pos = self.peds.pos()[group, :]
-                com = stateutils.center_of_mass(member_pos)
-                force_vec = com - member_pos
-                norms = stateutils.speeds(force_vec)
-                softened_factor = (np.tanh(norms - threshold) + 1) / 2
-                forces[group, :] += (force_vec.T * softened_factor).T
+        if not self.peds.has_group():
+            return forces
+
+        for group in self.peds.groups:
+            threshold = (len(group) - 1) / 2
+            member_pos = self.peds.pos()[group, :]
+            com = stateutils.centroid(member_pos)
+            force_vec = com - member_pos
+            norms = stateutils.speeds(force_vec)
+            softened_factor = (np.tanh(norms - threshold) + 1) / 2
+            forces[group, :] += (force_vec.T * softened_factor).T
         return forces * self.factor
 
 
@@ -170,7 +172,7 @@ class GroupGazeForce(Force):
                 # use center of mass without the current agent
                 relative_com = np.array(
                     [
-                        stateutils.center_of_mass(member_pos[np.arange(group_size) != i, :2])
+                        stateutils.centroid(member_pos[np.arange(group_size) != i, :2])
                         - member_pos[i, :]
                         for i in range(group_size)
                     ]
@@ -209,7 +211,7 @@ class GroupGazeForceAlt(Force):
                 # use center of mass without the current agent
                 relative_com = np.array(
                     [
-                        stateutils.center_of_mass(member_pos[np.arange(group_size) != i, :2])
+                        stateutils.centroid(member_pos[np.arange(group_size) != i, :2])
                         - member_pos[i, :]
                         for i in range(group_size)
                     ]
@@ -231,6 +233,29 @@ class GroupGazeForceAlt(Force):
         return forces * self.factor
 
 
+# class DesiredForce(Force):
+#     """Calculates the force between this agent and the next assigned waypoint.
+#     If the waypoint has been reached, the next waypoint in the list will be
+#     selected.
+#     :return: the calculated force
+#     """
+
+#     def _get_force(self):
+#         relexation_time = self.config("relaxation_time", 0.5)
+#         goal_threshold = self.config("goal_threshold", 0.1)
+#         pos = self.peds.pos()
+#         vel = self.peds.vel()
+#         goal = self.peds.goal()
+#         direction, dist = stateutils.normalize(goal - pos)
+#         force = np.zeros((self.peds.size(), 2))
+#         force[dist > goal_threshold] = (
+#             direction * self.peds.max_speeds.reshape((-1, 1)) - vel.reshape((-1, 2))
+#         )[dist > goal_threshold, :]
+#         force[dist <= goal_threshold] = -1.0 * vel[dist <= goal_threshold]
+#         force /= relexation_time
+#         return force * self.factor
+
+
 class DesiredForce(Force):
     """Calculates the force between this agent and the next assigned waypoint.
     If the waypoint has been reached, the next waypoint in the list will be
@@ -241,17 +266,31 @@ class DesiredForce(Force):
     def _get_force(self):
         relexation_time = self.config("relaxation_time", 0.5)
         goal_threshold = self.config("goal_threshold", 0.1)
-        pos = self.peds.pos()
-        vel = self.peds.vel()
-        goal = self.peds.goal()
-        direction, dist = stateutils.normalize(goal - pos)
+        pos: np.ndarray = self.peds.pos()
+        vel: np.ndarray = self.peds.vel()
+        goal: np.ndarray = self.peds.goal()
+        max_speeds: np.ndarray = self.peds.max_speeds
+
         force = np.zeros((self.peds.size(), 2))
-        force[dist > goal_threshold] = (
-            direction * self.peds.max_speeds.reshape((-1, 1)) - vel.reshape((-1, 2))
-        )[dist > goal_threshold, :]
-        force[dist <= goal_threshold] = -1.0 * vel[dist <= goal_threshold]
-        force /= relexation_time
+        desired_force(force, relexation_time, goal_threshold, pos, vel, goal, max_speeds)
         return force * self.factor
+
+
+@njit(fastmath=True)
+def desired_force(out_forces: np.ndarray, relexation_time: float, goal_threshold: float,
+                  pos: np.ndarray, vel: np.ndarray, goal: np.ndarray, max_speeds: np.ndarray):
+    # TODO: figure out why this code allocates 2 MB/s
+    for i in range(pos.shape[0]):
+        vec_x = goal[i, 0] - pos[i, 0]
+        vec_y = goal[i, 1] - pos[i, 1]
+        dist = (vec_x**2 + vec_y**2)**0.5
+        if dist > goal_threshold and dist > 0:
+            unit_vec_x = vec_x / dist
+            unit_vec_y = vec_y / dist
+            out_forces[i, 0] = unit_vec_x * max_speeds[i] - vel[i, 0] / relexation_time
+            out_forces[i, 1] = unit_vec_y * max_speeds[i] - vel[i, 1] / relexation_time
+        else:
+            out_forces[i] = -1.0 * vel[i] / relexation_time
 
 
 class SocialForce(Force):
@@ -298,6 +337,58 @@ class SocialForce(Force):
         force = force_velocity + force_angle  # n*(n-1) x 2
         force = np.sum(force.reshape((self.peds.size(), -1, 2)), axis=1)
         return force * self.factor
+
+
+# class SocialForce(Force):
+#     """Calculates the social force between this agent and all the other agents
+#     belonging to the same scene.
+#     It iterates over all agents inside the scene, has therefore the complexity O(N^2).
+#     A better agent storing structure in Tscene would fix this. But for small (less than
+#     10000 agents) scenarios, this is just fine.
+#     :return:  nx2 ndarray the calculated force
+#     """
+
+#     def _get_force(self):
+#         lambda_importance = self.config("lambda_importance", 2.0)
+#         gamma = self.config("gamma", 0.35)
+#         n = self.config("n", 2)
+#         n_prime = self.config("n_prime", 3)
+#         num_peds = self.peds.size()
+#         peds_pos = self.peds.pos()
+#         vel = self.peds.vel()
+#         force = social_force(lambda_importance, gamma, n, n_prime, num_peds, peds_pos, vel)
+#         return force * self.factor
+
+
+# @njit(fastmath=True)
+# def social_force(lambda_importance: float, gamma: float, n: int, n_prime: int,
+#                  num_peds: int, peds_pos: np.ndarray, vel: np.ndarray) -> np.ndarray:
+#     pos_diff = stateutils.each_diff(peds_pos)  # n*(n-1)x2 other - self
+#     diff_direction, diff_length = stateutils.normalize(pos_diff)
+#     vel_diff = -1.0 * stateutils.each_diff(vel)  # n*(n-1)x2 self - other
+
+#     # compute interaction direction t_ij
+#     interaction_vec = lambda_importance * vel_diff + diff_direction
+#     interaction_direction, interaction_length = stateutils.normalize(interaction_vec)
+
+#     # compute angle theta (between interaction and position difference vector)
+#     theta = stateutils.vector_angles(interaction_direction) \
+#         - stateutils.vector_angles(diff_direction)
+#     # compute model parameter B = gamma * ||D||
+#     B = gamma * interaction_length
+
+#     force_velocity_amount = np.exp(-1.0 * diff_length / B - np.square(n_prime * B * theta))
+#     force_angle_amount = -np.sign(theta) * np.exp(
+#         -1.0 * diff_length / B - np.square(n * B * theta)
+#     )
+#     force_velocity = force_velocity_amount.reshape(-1, 1) * interaction_direction
+#     force_angle = force_angle_amount.reshape(-1, 1) * stateutils.left_normal(
+#         interaction_direction
+#     )
+
+#     force = force_velocity + force_angle  # n*(n-1) x 2
+#     force = np.sum(force.reshape((num_peds, -1, 2)), axis=1)
+#     return force
 
 
 # class ObstacleForce(Force):
