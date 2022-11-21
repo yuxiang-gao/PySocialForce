@@ -38,6 +38,8 @@ class Simulator:
     """
 
     def __init__(self, state, groups=None, obstacles=None, config_file=None):
+        # TODO: where is max_speeds declared?!
+
         self.config = DefaultConfig()
         if config_file:
             self.config.load_config(config_file)
@@ -89,6 +91,9 @@ class Simulator:
 
     def get_obstacles(self):
         return self.env.obstacles
+
+    def get_raw_obstacles(self):
+        return self.env.obstacles_raw
 
     def step_once(self):
         """step once"""

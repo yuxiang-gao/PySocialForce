@@ -1,9 +1,15 @@
 """This module tracks the state odf scene and scen elements like pedestrians, groups and obstacles"""
-from typing import List
+from math import cos, sin, atan2, pi
+from typing import List, Tuple
+from dataclasses import dataclass, field
 
 import numpy as np
 
 from pysocialforce.utils import stateutils
+
+
+Line2D = Tuple[float, float, float, float]
+Point2D = Tuple[float, float]
 
 
 class PedState:
@@ -122,30 +128,71 @@ class PedState:
         return -1
 
 
+@dataclass
 class EnvState:
     """State of the environment obstacles"""
+    _orig_obstacles: List[Line2D]
+    _resolution: int=10
+    _obstacles_linspace: List[np.ndarray] = field(init=False)
+    _obstacles_raw: np.ndarray = field(init=False)
 
-    def __init__(self, obstacles, resolution=10):
-        self.resolution = resolution
-        self.obstacles = obstacles
+    def __post_init__(self):
+        self._obstacles_raw = self._update_obstacles_raw(self._orig_obstacles)
+        self._obstacles_linspace = self._update_obstacles_linspace(self._orig_obstacles)
+
+    @property
+    def obstacles_raw(self) -> np.ndarray:
+        """a 2D numpy array representing a list of 2D lines
+        as (start_x, start_y, end_x, end_y) for array indices 0-3.
+        Additionally, the array contains the orthogonal unit vector
+        for each 2D line at indices 4-5."""
+        return self._obstacles_raw
 
     @property
     def obstacles(self) -> List[np.ndarray]:
-        """obstacles is a list of np.ndarray"""
-        return self._obstacles
+        """a list of np.ndarrays, each representing a uniform
+        linspace of 0.1 steps between |p_start, p_end|"""
+        return self._obstacles_linspace
 
     @obstacles.setter
-    def obstacles(self, obstacles):
-        """Input an list of (startx, endx, starty, endy) as start and end of a line"""
-        if obstacles is None:
-            self._obstacles = []
+    def obstacles(self, obstacles: List[Line2D]):
+        """Input an list of (start_x, end_x, start_y, end_y) as start and end of a line"""
+        self._orig_obstacles = obstacles
+        self._obstacles_raw = self._update_obstacles_raw(obstacles)
+        self._obstacles_linspace = self._update_obstacles_linspace(obstacles)
+
+    def _update_obstacles_linspace(self, obs_lines: List[Line2D]) -> List[np.ndarray]:
+        if obs_lines is None:
+            obstacles = []
         else:
-            self._obstacles = []
-            for startx, endx, starty, endy in obstacles:
-                samples = int(np.linalg.norm((startx - endx, starty - endy)) * self.resolution)
-                line = np.array(
-                    list(
-                        zip(np.linspace(startx, endx, samples), np.linspace(starty, endy, samples))
-                    )
-                )
-                self._obstacles.append(line)
+            obstacles = []
+            for start_x, end_x, start_y, end_y in obs_lines:
+                samples = int(np.linalg.norm((start_x - end_x, start_y - end_y)) * self._resolution)
+                line = np.array(list(zip(
+                    np.linspace(start_x, end_x, samples),
+                    np.linspace(start_y, end_y, samples))))
+                obstacles.append(line)
+        return obstacles
+
+    def _update_obstacles_raw(self, obs_lines: List[Line2D]) -> np.ndarray:
+        def orient(line):
+            start_x, end_x, start_y, end_y = line
+            vec_x, vec_y = end_x - start_x, end_y - start_y
+            return (atan2(vec_y, vec_x) + 2*pi) % (2*pi)
+
+        def unit_vec(orient):
+            return cos(orient), sin(orient)
+
+        if obs_lines is None:
+            return np.array([])
+
+        line_orients = np.array([orient(line) for line in obs_lines])
+        ortho_orients = (line_orients + pi/2) % (2*pi)
+        ortho_vecs = np.array([unit_vec(orient) for orient in ortho_orients])
+
+        obstacles = np.zeros((len(obs_lines), 6))
+        obstacles[:, :4] = [[start_x, start_y, end_x, end_y]
+                            for start_x, end_x, start_y, end_y in obs_lines]
+        obstacles[:, 4:] = ortho_vecs
+
+        return obstacles
