@@ -6,3 +6,4 @@ from .simulator import Simulator
 from .potentials import PedPedPotential, PedSpacePotential
 from .forces import *
 from .utils import plot
+from .utils import data_loader

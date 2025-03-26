@@ -114,6 +114,27 @@ class SceneVisualizer:
         self.ax.legend()
         return self.fig
 
+    # def plot(self):
+    #     """Main method to create plot with 90-degree clockwise rotation."""
+    #     self.plot_obstacles()
+    #     groups = self.group_states[0]  # static group for now
+    #     if not groups:
+    #         for ped in range(self.scene.peds.size()):
+    #             x = self.states[:, ped, 0]
+    #             y = self.states[:, ped, 1]
+    #             self.ax.plot(y, -x, "-o", label=f"ped {ped}", markersize=2.5)  # Swap x and y
+    #     else:
+    #         colors = plt.cm.rainbow(np.linspace(0, 1, len(groups)))
+
+    #         for i, group in enumerate(groups):
+    #             for ped in group:
+    #                 x = self.states[:, ped, 0]
+    #                 y = self.states[:, ped, 1]
+    #                 self.ax.plot(y, -x, "-o", label=f"ped {ped}", markersize=2.5, color=colors[i])  # Swap x and y
+
+    #     self.ax.legend()
+    #     return self.fig
+
     def animate(self):
         """Main method to create animation"""
 

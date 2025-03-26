@@ -1,50 +1,62 @@
 # PySocialForce
 
-master: [![Build Status](https://travis-ci.com/yuxiang-gao/PySocialForce.svg?branch=master)](https://travis-ci.com/yuxiang-gao/PySocialForce)
-dev: [![Build Status](https://travis-ci.com/yuxiang-gao/PySocialForce.svg?branch=dev)](https://travis-ci.com/yuxiang-gao/PySocialForce)
-
-A Python Implementation of the Extended Social Force Model for Pedestrian Dynamics
-
+An exepriment on Social Force calculation on real data. 
+The project consiists of 2 main modules: 
+- Hardware: RGB camera setup
+- Software 
+  - Human detection and tracking with YOLO
+  - Social Force was calculated based on PySocialForce framework and a custom approach 
+  
 ## Table of Contents
 
 - [PySocialForce](#pysocialforce)
   - [Table of Contents](#table-of-contents)
   - [About The Project](#about-the-project)
-    - [Roadmap](#roadmap)
-  - [Installation](#installation)
+  - [Setup](#setup)
+    - [Hardware Setup](#hardware-setup)
+    - [Software Setup](#software-setup)
   - [Usage](#usage)
+    - [Data Preprocessing](#data-preprocessing)
   - [Configuration](#configuration)
-  - [Examples](#examples)
+  - [Examples on Real Data](#examples-on-real-data)
+  - [Examples on Artificial Data](#examples-on-artificial-data)
     - [Ped-ped Scenarios](#ped-ped-scenarios)
     - [Environmental obstacles](#environmental-obstacles)
-    - [Groups](#groups)
-  - [Contributing to this project](#contributing-to-this-project)
   - [License](#license)
   - [Acknowledgements](#acknowledgements)
   - [References](#references)
 
 ## About The Project
 
-This project is a NumPy implementation of the **Extended Social Force Model** [[2]](#2).
-It extends the vanilla social force model [[1]](#1) to simulate the walking behaviour of pedestrian social groups.
+This project implements an experiment on Social Force modeling.
 
-### Roadmap
+The software component is based on the PySocialForce repository, which is a NumPy implementation of the **Extended Social Force Model** [[2]](#2).
 
-- [x] Simulation of indiviual pedestrians
-- [x] Social groups simulation
-- [ ] Inter-group interactions
-- [x] Environmental obstacles
-- [ ] Better environment representation
-- [x] Easy configuration with toml file
-- [x] Visualization of indiviuals and groups
-- [ ] Visualization of forces/potentials
+## Setup
 
-## Installation
+### Hardware Setup
 
-1. Clone the PySocialForce repo
+- Data collection was performed using a wide-angle RGB camera.
+
+- The camera was positioned at an elevated viewpoint.
+
+- Human detection and tracking were performed using the YOLO model.
+
+![experiment](results/experiment.png)       
+
+To convert pixel coordinates to metric space, a **Homography Matrix** was applied. However, the results were inconsistent.
+To refine the data:
+
+- **Savitzky-Golay filtering** was used to remove outliers.
+
+- Additional **linear scaling along the Y-axis** was applied to approximate real-world measurements.
+
+### Software Setup
+
+1. Clone the repository
 
     ```sh
-    git clone https://github.com/yuxiang-gao/PySocialForce.git
+    git clone https://github.com/illusoryTwin/PySocialForce.git
     ```
 
 2. (optional) Create a python virtual environment and activate it
@@ -62,27 +74,77 @@ It extends the vanilla social force model [[1]](#1) to simulate the walking beha
         pytest tests/*.py
     ```
 
+
+
 ## Usage
 
-Basic usage:
+One can simply run `run_experiment.py` inside `pysocialforce` folder (substitute with your data) by:
 
-```python
-import pysocialforce as psf
-# initiate simulator
-sim = psf.Simulator(
-        initial_state, groups=groups, obstacles=obstacles
-    )
-# do 50 updates
-sim.step(n=50)
+```
+python3 run_experiment.py 
 ```
 
-To generate an animation of the simulation, use the `SceneVisualizer` context:
+
+To use the PySocialForce framework, load your data in the following format:
+
+```csv
+Track_ID,Image_File,X,Y,Vx,Vy,Speed
+```
+
+
+Where:
+- **Track_ID**: Unique ID of a moving object (person).
+- **X, Y**: Initial positions.
+- **Vx, Vy**: Velocities.
+- **Speed**: Computed speed.
+
+### Data Preprocessing
+
+Process your dataset using the data loader to retrieve the `initial_state` as follows:
+
+```
+columns = ["Track_ID", "px", "py", "vx", "vy", "gx", "gy"]
+```
+
+Where:
+- **px, py**: Initial positions.
+- **vx, vy**: Velocities.
+- **gx, gy**: goal positions.
+  
+Example of usage:
 
 ```python
-with psf.plot.SceneVisualizer(simulator, "output_image") as sv:
-    sv.animate()
+initial_state = load_initial_state(csv_file, start_timestep_id=5, end_timestep_id=45)
 ```
-For more examples, please refer to the [examples folder](examples).
+
+```python
+# social groups information is represented as lists of indices of the state array
+groups = [[0, 1], [2], [3]] 
+
+# list of linear obstacles given in the form of (x_min, x_max, y_min, y_max)
+obs = None
+# initiate the simulator,
+s = psf.Simulator(
+    initial_state,
+    groups=groups,
+    obstacles=obs,
+    config_file=Path(__file__).resolve().parent.joinpath("custom_config.toml"),
+)
+s.step(20)
+
+Example of how to define a force 
+des_force = forces.DesiredForce()
+des_force.init(s, s.config)
+des_force.factor = 1.0
+```
+
+
+
+
+
+
+
+
 
 ## Configuration
 You can configure the parameters by passing in a [toml](https://github.com/toml-lang/toml) file to the simulator:
@@ -135,7 +197,24 @@ factor = 4.0
 fov_phi = 90.0
 ```
 
-## Examples
+## Examples on Real Data
+
+![experiment](results/simulation_20s.gif)       
+
+
+Timestamps [5: 45]
+![experiment](results/sim_5_45.gif)       
+
+Timestamps [45: 90]
+![experiment](results/sim_45_90.gif)  
+
+The obtained plots.
+![plot](results/plot1.png)  
+![plot](results/plot2.png)  
+
+
+## Examples on Artificial Data 
+(Examples from the PySocialForce framework repo)
 
 ### Ped-ped Scenarios
 
@@ -149,14 +228,6 @@ fov_phi = 90.0
 | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Emergent lane formation with Emergent lane formation with 30 pedestrians: ![walkway30](images/walkway_30.gif) | Emergent lane formation with Emergent lane formation with 60 pedestrians:  ![walkway60](images/walkway_60.gif) |
 
-### Groups
-
-![group crossing](images/group_crossing.gif)
-
-## Contributing to this project
-Thanks for your interest in contributing! PySocialForce is a open-source project and we welcome contributions of any kind.
-If you find a bug or have a feature request, feel free to contact us using [Github issues](https://github.com/yuxiang-gao/PySocialForce/issues). If you are reporting a bug, please try to include a minimal example to recreate it. If you are requesting a feature, please also give some possible use cases to justify the request.
-If you want to help with development, you can work on a fork of the project and start a pull request. Please document your code and make sure that you have added the necessary tests and examples. Please also adhere to [semantic versioning](https://semver.org).
 
 ## License
 
@@ -164,8 +235,8 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Acknowledgements
 
-- This project is based on [svenkreiss](https://github.com/svenkreiss)'s implementation of the vanilla social force model.
-- The implementation of forces drew inspiration from the [pedsim_ros][pedsim_ros] package.
+- This project is based on [PySocialForce](https://github.com/yuxiang-gao/PySocialForce)'s implementation of the social force framework.
+  
 
 ## References
 
